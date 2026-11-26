@@ -1,5 +1,5 @@
-// app.js — MediRemind AI Pro Max Engine
-import { auth, db, runGeminiAI } from "./firebase-config.js?v=10";
+// app.js — MediRemind AI Pro Max Engine (Direct Audio Mic + Instant Pharmacy Links)
+import { auth, db, runGeminiAI } from "./firebase-config.js?v=11";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -76,20 +76,40 @@ function escapeHtml(str) {
 }
 
 function formatRichMessageHtml(rawText) {
-  let safe = escapeHtml(rawText);
-  // Convert markdown links [Label](https://...) to clickable links
-  safe = safe.replace(
+  const linkPlaceholders = [];
+  // Extract markdown links first so URLs stay completely intact
+  let textWithTokens = String(rawText || "").replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    (_, label, url) => {
+      const idx = linkPlaceholders.length;
+      linkPlaceholders.push(
+        `<a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)} ↗</a>`
+      );
+      return `@@LINK_${idx}@@`;
+    }
   );
-  // Convert standalone raw URLs to clickable links
-  safe = safe.replace(
+
+  // Extract standalone raw URLs
+  textWithTokens = textWithTokens.replace(
     /(^|[\s(>])(https?:\/\/[^\s<)]+)/g,
-    '$1<a href="$2" target="_blank" rel="noopener noreferrer">Open Link ↗</a>'
+    (_, prefix, url) => {
+      const idx = linkPlaceholders.length;
+      linkPlaceholders.push(
+        `<a href="${url}" target="_blank" rel="noopener noreferrer">Open Link ↗</a>`
+      );
+      return `${prefix}@@LINK_${idx}@@`;
+    }
   );
-  // Bold text **...**
+
+  let safe = escapeHtml(textWithTokens);
   safe = safe.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  return safe.replace(/\n/g, "<br>");
+  safe = safe.replace(/\n/g, "<br>");
+
+  linkPlaceholders.forEach((anchorHtml, idx) => {
+    safe = safe.replace(`@@LINK_${idx}@@`, anchorHtml);
+  });
+
+  return safe;
 }
 
 function getTodayDateStr() {
@@ -108,7 +128,22 @@ function getActiveProfile() {
   return appState.profiles[m];
 }
 
-// Custom Reusable Prompt Modal (Add Member / Rename Chat)
+function buildPharmacyLinksBlock(medNames) {
+  return medNames
+    .map((med) => {
+      const q = encodeURIComponent(med);
+      return (
+        `💊 **${med}**\n` +
+        `• [Apollo Pharmacy](https://www.apollopharmacy.in/search-medicines/${q})\n` +
+        `• [Tata 1mg](https://www.1mg.com/search/all?name=${q})\n` +
+        `• [Flipkart Health+](https://healthplus.flipkart.com/search?q=${q})\n` +
+        `• [PharmEasy](https://pharmeasy.in/search/all?name=${q})\n` +
+        `• [Netmeds](https://www.netmeds.com/catalogsearch/result?q=${q})`
+      );
+    })
+    .join("\n\n");
+}
+
 function openInputPrompt({ title, desc, placeholder = "", defaultValue = "", confirmText = "Save" }) {
   return new Promise((resolve) => {
     const modal = document.getElementById("promptModal");
@@ -216,7 +251,6 @@ onAuthStateChanged(auth, (user) => {
   const displayName = user.displayName || user.email.split("@")[0];
   document.getElementById("userSubtitle").dataset.userName = displayName;
 
-  // Load cached state instantly
   try {
     const cached = JSON.parse(localStorage.getItem(`mediremind_promax_${user.uid}`) || "null");
     if (cached && Array.isArray(cached.members) && cached.profiles) {
@@ -315,9 +349,7 @@ document.getElementById("addMemberBtn").onclick = async () => {
 function updateLightCostSummary() {
   const profile = getActiveProfile();
   const meds = profile.medicines || [];
-  // Calculate daily estimated cost (if price is strip/pack price, count daily share or direct price)
   const totalUnitPrice = meds.reduce((sum, m) => sum + (Number(m.price) || 0), 0);
-  // Estimate daily consumption cost (~1/10th of strip MRP per dose, or full if marked daily)
   const estDaily = Math.round(totalUnitPrice / 10);
   const estMonthly = estDaily * 30;
 
@@ -326,7 +358,6 @@ function updateLightCostSummary() {
   document.getElementById("monthlyCostVal").innerText = `₹${estMonthly}`;
 }
 
-// AI Web Price Updater
 document.getElementById("updateWebPricesBtn").onclick = async () => {
   const profile = getActiveProfile();
   const meds = profile.medicines || [];
@@ -480,7 +511,7 @@ function renderAllUI() {
   renderScheduleGrid();
 }
 
-// ==================== 4. VOICE MIC, CAMERA SCAN, UPLOAD & MANUAL ADD ====================
+// ==================== 4. DIRECT AUDIO MIC (GEMINI VOICE AI), CAMERA SCAN & ADD ====================
 function addMedicinesToActiveProfile(list) {
   const profile = getActiveProfile();
   let added = 0;
@@ -510,61 +541,130 @@ function addMedicinesToActiveProfile(list) {
   return { added, labels };
 }
 
-// Elderly Voice Microphone Recognition (Bengali, Hindi & English)
-let recognitionInstance = null;
-let isListening = false;
+// Bulletproof Direct Audio Recording + Gemini Multimodal Audio Processing (Zero SpeechRecognition network errors!)
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecordingAudio = false;
+let autoStopTimer = null;
 
-document.getElementById("voiceMicBtn").onclick = () => {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) {
-    return showToast("Voice input not supported in this browser. Type in the box below.", true);
-  }
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result || "";
+      resolve(String(dataUrl).split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
+document.getElementById("voiceMicBtn").onclick = async () => {
   const micBtn = document.getElementById("voiceMicBtn");
   const micLbl = document.getElementById("voiceMicLabel");
   const statusEl = document.getElementById("aiScanStatus");
 
-  if (isListening && recognitionInstance) {
-    recognitionInstance.stop();
+  // Stop recording if already active
+  if (isRecordingAudio && mediaRecorder && mediaRecorder.state === "recording") {
+    clearTimeout(autoStopTimer);
+    mediaRecorder.stop();
     return;
   }
 
-  recognitionInstance = new SpeechRec();
-  recognitionInstance.lang = "bn-IN";
-  recognitionInstance.interimResults = false;
-  recognitionInstance.maxAlternatives = 1;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return showToast("Microphone access not available in this browser", true);
+  }
 
-  recognitionInstance.onstart = () => {
-    isListening = true;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm")
+      ? "audio/webm"
+      : MediaRecorder.isTypeSupported("audio/mp4")
+      ? "audio/mp4"
+      : "";
+
+    mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      isRecordingAudio = false;
+      micBtn.classList.remove("mic-recording");
+      micLbl.innerText = "Speak Medicine";
+      stream.getTracks().forEach((track) => track.stop());
+
+      if (audioChunks.length === 0) return;
+
+      statusEl.innerText = "✨ AI is listening to your voice & scheduling medicines...";
+      statusEl.classList.remove("hidden");
+
+      try {
+        const finalMime = mediaRecorder.mimeType || "audio/webm";
+        const audioBlob = new Blob(audioChunks, { type: finalMime });
+        const base64Audio = await blobToBase64(audioBlob);
+
+        const prompt = `Listen carefully to this voice recording (which may be in Bengali, Hindi, or English).
+The user is speaking medicine name(s) and when to take them.
+Extract the spoken transcript, the medicines, their dose slots from ["Morning", "Noon", "Afternoon", "Night"], and approximate Indian pharmacy strip MRP in INR ("price").
+If a medicine is taken multiple times (e.g. morning and night, or sokal-rat), create separate items for each slot.
+Return ONLY valid JSON:
+{"transcript": "what the user said", "medicines": [{"name": "Medicine Name", "slot": "Morning", "price": 30}]}`;
+
+        const { text: reply, error } = await runGeminiAI({
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: finalMime.split(";")[0], data: base64Audio } }
+          ],
+          jsonMode: true
+        });
+
+        if (!reply) {
+          statusEl.innerText = `⚠️ ${error || "Could not process voice audio."}`;
+          return;
+        }
+
+        const parsed = JSON.parse(reply.match(/\{[\s\S]*\}/)[0]);
+        if (parsed.transcript) {
+          document.getElementById("aiTextEntryInput").value = parsed.transcript;
+        }
+
+        const { added, labels } = addMedicinesToActiveProfile(parsed.medicines || []);
+        renderAllUI();
+        await saveAppState();
+
+        statusEl.innerText =
+          added > 0
+            ? `✅ Heard "${parsed.transcript || "Voice"}" → Scheduled: ${labels.join(", ")}`
+            : `🗣️ Heard "${parsed.transcript || "Voice"}" (Already scheduled or no medicine name detected)`;
+      } catch (err) {
+        statusEl.innerText = `⚠️ Voice processing failed: ${err.message}`;
+      }
+    };
+
+    mediaRecorder.start();
+    isRecordingAudio = true;
     micBtn.classList.add("mic-recording");
-    micLbl.innerText = "Listening...";
-    statusEl.innerText = "🎤 Speak medicine name & time (e.g. 'Morning and Night Paracetamol 500')...";
+    micLbl.innerText = "Tap to Stop";
+    statusEl.innerText = "🔴 Listening... Speak medicine name & time (e.g. 'Paracetamol morning and night'), then tap Stop.";
     statusEl.classList.remove("hidden");
-  };
 
-  recognitionInstance.onresult = (event) => {
-    const transcript = event.results?.[0]?.[0]?.transcript || "";
-    if (transcript) {
-      document.getElementById("aiTextEntryInput").value = transcript;
-      statusEl.innerText = `🗣️ Heard: "${transcript}" — Scheduling now...`;
-      document.getElementById("aiTextAddBtn").click();
-    }
-  };
-
-  recognitionInstance.onerror = (event) => {
-    statusEl.innerText = `⚠️ Voice error (${event.error}). Try speaking clearly or type below.`;
-  };
-
-  recognitionInstance.onend = () => {
-    isListening = false;
-    micBtn.classList.remove("mic-recording");
-    micLbl.innerText = "Speak Medicine";
-  };
-
-  recognitionInstance.start();
+    // Auto-stop after 9 seconds
+    autoStopTimer = setTimeout(() => {
+      if (isRecordingAudio && mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+    }, 9000);
+  } catch (err) {
+    statusEl.innerText = "⚠️ Microphone permission denied. Please allow mic access in browser.";
+    statusEl.classList.remove("hidden");
+  }
 };
 
-// AI Natural Language Add (from Voice or Text)
+// AI Natural Language Add (from Text)
 document.getElementById("aiTextAddBtn").onclick = async () => {
   const inp = document.getElementById("aiTextEntryInput");
   const statusEl = document.getElementById("aiScanStatus");
@@ -574,7 +674,7 @@ document.getElementById("aiTextAddBtn").onclick = async () => {
   statusEl.innerText = "✨ AI is scheduling medicines & estimating prices...";
   statusEl.classList.remove("hidden");
 
-  const prompt = `Extract medicines, dose slots, and approximate Indian pharmacy strip MRP (in INR) from this voice/text input (may be in English, Bengali, or Hindi): "${text}".
+  const prompt = `Extract medicines, dose slots, and approximate Indian pharmacy strip MRP (in INR) from this text (English, Bengali, or Hindi): "${text}".
 Allowed slots: ["Morning", "Noon", "Afternoon", "Night"].
 If a medicine is taken at multiple times (e.g. morning and night, or 1-0-1), create separate items for each slot.
 Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Morning", "price": 30}]}`;
@@ -775,7 +875,7 @@ function createNewChat(hideHistory = true) {
     messages: [
       {
         role: "ai",
-        text: "💊 Hi! I'm **MediRemind AI**. Ask me for:\n• **Nearest Medical Stores** (Google Maps)\n• **Direct Online Medicine Links** (Apollo Pharmacy, Tata 1mg, Flipkart Health+, PharmEasy)\n• **Medicine Dosage & Prices** in English, Bengali, or Hindi!"
+        text: "💊 Hi! I'm **MediRemind AI**. Ask me for:\n• **Nearest Medical Stores** (Google Maps)\n• **Direct Online Medicine Links** (Apollo Pharmacy, Tata 1mg, Flipkart Health+, PharmEasy, Netmeds)\n• **Medicine Dosage & Prices** in English, Bengali, or Hindi!"
       }
     ],
     updatedAt: Date.now()
@@ -902,31 +1002,34 @@ document.getElementById("newChatBtn").onclick = () => {
 document.getElementById("renameChatBtn").onclick = () => renameChatById(activeChatId);
 document.getElementById("deleteChatBtn").onclick = () => deleteChatById(activeChatId);
 
-// Nearest Medical Store Button (Uses GPS if allowed + Google Maps + Gemini Search)
+// Nearest Medical Store Button
 document.getElementById("findStoreChip").onclick = () => {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         sendAiChatMessage(
-          `Find the nearest open medical stores and pharmacies around coordinates (${latitude.toFixed(4)}, ${longitude.toFixed(4)}) and give a direct Google Maps link: https://www.google.com/maps/search/medical+store+pharmacy/@${latitude},${longitude},15z`
+          `Find the nearest open medical stores and pharmacies around (${latitude.toFixed(4)}, ${longitude.toFixed(4)}) and include this link: [Open Nearest Medical Stores in Google Maps](https://www.google.com/maps/search/medical+store+pharmacy/@${latitude},${longitude},15z)`,
+          true
         );
       },
       () => {
         sendAiChatMessage(
-          "Find the nearest open medical stores and pharmacies near me and include a direct Google Maps link: https://www.google.com/maps/search/medical+store+pharmacy+near+me"
+          "Find the nearest open medical stores and pharmacies near me and include this link: [Open Nearest Medical Stores in Google Maps](https://www.google.com/maps/search/medical+store+pharmacy+near+me)",
+          true
         );
       },
       { timeout: 4000 }
     );
   } else {
     sendAiChatMessage(
-      "Find the nearest open medical stores and pharmacies near me with a Google Maps link: https://www.google.com/maps/search/medical+store+pharmacy+near+me"
+      "Find the nearest open medical stores and pharmacies near me and include this link: [Open Nearest Medical Stores in Google Maps](https://www.google.com/maps/search/medical+store+pharmacy+near+me)",
+      true
     );
   }
 };
 
-async function sendAiChatMessage(userText) {
+async function sendAiChatMessage(userText, forceSearch = false) {
   const q = userText.trim();
   if (!q) return;
 
@@ -941,36 +1044,96 @@ async function sendAiChatMessage(userText) {
   renderActiveChat();
   renderChatHistory();
 
+  // Instant Direct Online Buy Links Handler (Zero truncation, works even if schedule is empty!)
+  const lowerQ = q.toLowerCase();
+  const isBuyRequest =
+    lowerQ.includes("buy") ||
+    lowerQ.includes("online") ||
+    lowerQ.includes("apollo") ||
+    lowerQ.includes("1mg") ||
+    lowerQ.includes("flipkart") ||
+    lowerQ.includes("pharmeasy") ||
+    lowerQ.includes("order") ||
+    lowerQ.includes("link");
+
+  if (isBuyRequest && !forceSearch) {
+    const profile = getActiveProfile();
+    const scheduledMeds = Array.from(new Set((profile.medicines || []).map((m) => m.name)));
+
+    if (scheduledMeds.length > 0) {
+      const linksReply =
+        `🛒 **Direct Online Purchase Links for ${appState.activeMember}'s Medicines:**\n\n` +
+        buildPharmacyLinksBlock(scheduledMeds);
+      session.messages.push({ role: "ai", text: linksReply });
+      session.updatedAt = Date.now();
+      saveChatsLocal();
+      syncChatCloud(session);
+      renderActiveChat();
+      return;
+    } else {
+      // Ask AI to extract medicine name from user's prompt, or show sample links if none mentioned
+      const { text: extracted } = await runGeminiAI({
+        parts: [
+          {
+            text: `Extract any medicine names mentioned in: "${q}". Return ONLY a JSON array of strings, e.g. ["Paracetamol 500mg"] or [] if none.`
+          }
+        ],
+        jsonMode: true
+      });
+      let askedMeds = [];
+      try {
+        const arr = JSON.parse((extracted || "[]").match(/\[[\s\S]*\]/)[0]);
+        if (Array.isArray(arr)) askedMeds = arr.filter(Boolean);
+      } catch (e) {}
+
+      if (askedMeds.length > 0) {
+        const linksReply =
+          `🛒 **Direct Online Purchase Links:**\n\n` + buildPharmacyLinksBlock(askedMeds);
+        session.messages.push({ role: "ai", text: linksReply });
+        session.updatedAt = Date.now();
+        saveChatsLocal();
+        syncChatCloud(session);
+        renderActiveChat();
+        return;
+      } else {
+        const emptyReply =
+          `You haven't added any medicines to **${appState.activeMember}**'s schedule yet! Add a medicine on the dashboard, or type any medicine name here (e.g. **"Buy Dolo 650 online"**).\n\n` +
+          `Here are quick links for common medicines:\n\n` +
+          buildPharmacyLinksBlock(["Paracetamol 500mg", "Pantoprazole 40mg"]);
+        session.messages.push({ role: "ai", text: emptyReply });
+        session.updatedAt = Date.now();
+        saveChatsLocal();
+        syncChatCloud(session);
+        renderActiveChat();
+        return;
+      }
+    }
+  }
+
   const box = document.getElementById("aiChatMessages");
   const loadingDiv = document.createElement("div");
   loadingDiv.className = "bubble ai";
-  loadingDiv.innerText = "✨ Searching schedules, pharmacies & online medicine links...";
+  loadingDiv.innerText = "✨ Searching schedules & pharmacies...";
   box.appendChild(loadingDiv);
   box.scrollTop = box.scrollHeight;
 
-  const systemInstruction = `You are MediRemind AI Pro Max, an advanced medical reminder, pharmacy locator, and online medicine link assistant.
+  const systemInstruction = `You are MediRemind AI Pro Max, a medical reminder and pharmacy assistant.
 Family Profiles & Live Medicine Data: ${JSON.stringify(appState)}
 Active Member: ${appState.activeMember}
 
 RULES:
 1. Reply in the exact language the user asked (English, Bengali, or Hindi).
-2. Whenever the user asks to buy a medicine or asks about online stores, ALWAYS provide direct clickable markdown links for Indian online pharmacies using these exact URL patterns (replace MEDICINE with URL-encoded medicine name):
-   - [Buy on Apollo Pharmacy](https://www.apollopharmacy.in/search-medicines/MEDICINE)
-   - [Buy on Tata 1mg](https://www.1mg.com/search/all?name=MEDICINE)
-   - [Buy on Flipkart Health+](https://healthplus.flipkart.com/search?q=MEDICINE)
-   - [Buy on PharmEasy](https://pharmeasy.in/search/all?name=MEDICINE)
-   - [Buy on Netmeds](https://www.netmeds.com/catalogsearch/result?q=MEDICINE)
-3. Whenever the user asks for the nearest medical store or pharmacy, provide real nearby pharmacy names if known and ALWAYS include a clickable Google Maps link like [Open Nearest Medical Stores in Google Maps](https://www.google.com/maps/search/medical+store+pharmacy+near+me).
-4. Keep answers clear, well-structured with bullet points, and include estimated ₹ prices where helpful.`;
+2. If the user asks for nearest medical stores, include a clickable markdown link [Open Nearest Medical Stores in Google Maps](https://www.google.com/maps/search/medical+store+pharmacy+near+me).
+3. Keep answers concise, accurate, and complete.`;
 
-  const historyPayload = session.messages.slice(-10).map((m) => ({
+  const historyPayload = session.messages.slice(-8).map((m) => ({
     role: m.role === "user" ? "user" : "model",
     parts: [{ text: m.text }]
   }));
 
   const { text, error } = await runGeminiAI({
     contents: [{ role: "user", parts: [{ text: systemInstruction }] }, ...historyPayload],
-    useSearch: true
+    useSearch: forceSearch
   });
 
   const finalReply = text || `⚠️ ${error || "Could not connect to AI."}`;
@@ -1114,7 +1277,6 @@ function updateNextAlarmBanner() {
   subEl.innerText = `${uName} • ${appState.activeMember}'s Next: Tomorrow ${profile.alarms.Morning || "08:30"}`;
 }
 
-// Background Alarm Checker across ALL Family Members
 setInterval(() => {
   const now = new Date();
   const curHM = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
