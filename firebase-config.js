@@ -38,18 +38,20 @@ export async function runGeminiAI({ contents = null, parts = [], jsonMode = fals
     payload.generationConfig = { responseMimeType: "application/json" };
   }
 
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  const isVertexExpressKey = apiKey.startsWith("AQ.");
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-1.5-flash"];
 
   for (const model of models) {
+    const endpoint = isVertexExpressKey
+      ? `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }
-      );
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
       const data = await res.json();
       if (!res.ok) {
@@ -66,6 +68,34 @@ export async function runGeminiAI({ contents = null, parts = [], jsonMode = fals
     } catch (err) {
       return { text: null, error: err.message || "Network error connecting to Gemini AI." };
     }
+  }
+
+  if (!isVertexExpressKey) {
+    try {
+      const listRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`
+      );
+      const listData = await listRes.json();
+      const validModel = (listData.models || []).find(
+        (m) =>
+          Array.isArray(m.supportedGenerationMethods) &&
+          m.supportedGenerationMethods.includes("generateContent") &&
+          m.name.includes("flash")
+      );
+      if (validModel) {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }
+        );
+        const data = await res.json();
+        const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (replyText) return { text: replyText, error: null };
+      }
+    } catch (e) {}
   }
 
   return { text: null, error: "Gemini model unavailable. Check your API key." };
