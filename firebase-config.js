@@ -1,4 +1,4 @@
-// firebase-config.js — MediRemind AI Firebase & Gemini AI Engine
+// firebase-config.js — MediRemind AI Pro Max Engine
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -18,7 +18,7 @@ export const db = getFirestore(app);
 
 setPersistence(auth, browserLocalPersistence).catch(() => {});
 
-// Gemini API Key split into 4 parts
+// Working Gemini API Key split into 4 parts
 const GEMINI_PART_1 = "AQ.Ab8RN6L8dUU";
 const GEMINI_PART_2 = "ZhzK6_555b94P";
 const GEMINI_PART_3 = "uasdUE2PIZLEj";
@@ -34,52 +34,59 @@ export function getActiveGeminiKey() {
   return (GEMINI_PART_1 + GEMINI_PART_2 + GEMINI_PART_3 + GEMINI_PART_4).trim();
 }
 
-// Universal Gemini AI Caller with Auto-Fallback & Timeout
-export async function runGeminiAI({ contents, parts, jsonMode = false }) {
+// Universal Gemini AI Caller with Web Search Grounding & Auto-Fallback
+export async function runGeminiAI({ contents, parts, jsonMode = false, useSearch = false }) {
   const apiKey = getActiveGeminiKey();
   const models = [
+    "gemini-2.5-flash",
     "gemini-3.5-flash-lite",
-    "gemini-3.5-flash",
-    "gemini-flash-lite-latest",
     "gemini-flash-latest",
-    "gemini-2.5-flash"
+    "gemini-flash-lite-latest"
   ];
   const payloadContents = contents || [{ role: "user", parts }];
-  const bodyObj = { contents: payloadContents };
 
-  if (jsonMode) {
-    bodyObj.generationConfig = { responseMimeType: "application/json" };
-  }
-
+  const attemptModes = useSearch ? [true, false] : [false];
   let lastError = "";
-  for (const model of models) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 14000);
 
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-goog-api-key": apiKey
-          },
-          body: JSON.stringify(bodyObj),
-          signal: controller.signal
-        }
-      );
-      clearTimeout(timer);
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (res.ok && text) {
-        return { text: text.trim(), error: null };
+  for (const searchFlag of attemptModes) {
+    for (const model of models) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+
+      const bodyObj = { contents: payloadContents };
+      if (searchFlag) {
+        bodyObj.tools = [{ google_search: {} }];
       }
-      if (data.error?.message) lastError = data.error.message;
-    } catch (err) {
-      clearTimeout(timer);
-      lastError = err.name === "AbortError" ? "Timeout, trying backup..." : err.message;
+      if (jsonMode && !searchFlag) {
+        bodyObj.generationConfig = { responseMimeType: "application/json" };
+      }
+
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-goog-api-key": apiKey
+            },
+            body: JSON.stringify(bodyObj),
+            signal: controller.signal
+          }
+        );
+        clearTimeout(timer);
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (res.ok && text) {
+          return { text: text.trim(), error: null };
+        }
+        if (data.error?.message) lastError = data.error.message;
+      } catch (err) {
+        clearTimeout(timer);
+        lastError = err.name === "AbortError" ? "Timeout, retrying..." : err.message;
+      }
     }
   }
+
   return { text: null, error: lastError || "AI connection failed" };
 }
