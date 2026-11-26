@@ -24,15 +24,47 @@
     * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       background: var(--bg);
-      background-image: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.18), transparent 45%);
+      background-image:
+        radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 10%, rgba(34, 211, 238, 0.12), transparent 45%);
       color: var(--text);
       padding: 14px 14px 48px;
       min-height: 100vh;
     }
-    .container { max-width: 680px; margin: 0 auto; }
+    .container { max-width: 720px; margin: 0 auto; }
     .hidden { display: none !important; }
 
-    /* Top Header */
+    /* ================= LOGIN / SIGNUP SCREEN ================= */
+    .auth-wrapper {
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .auth-card {
+      background: var(--card);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-top: 3px solid var(--primary);
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 410px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+    .google-btn {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      background: #ffffff; color: #06100e; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      cursor: pointer;
+    }
+    .divider {
+      display: flex; align-items: center; gap: 10px; margin: 16px 0;
+      color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    /* ================= TOP HEADER ================= */
     .topbar {
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
       background: var(--card); border: 1px solid rgba(16, 185, 129, 0.35);
@@ -42,7 +74,7 @@
     .brand-sub { font-size: 11px; color: var(--cyan); margin-top: 2px; font-weight: 600; }
     .top-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
-    /* Buttons & Inputs */
+    /* ================= BUTTONS & INPUTS ================= */
     .btn {
       border: none; border-radius: 11px; font-size: 12px; font-weight: 700;
       padding: 10px 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -51,6 +83,10 @@
     .btn:active { transform: scale(0.96); }
     .btn-primary { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
     .btn-cyan { background: rgba(34, 211, 238, 0.16); border: 1px solid rgba(34, 211, 238, 0.45); color: var(--cyan); }
+    .btn-ai {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(34, 211, 238, 0.25));
+      border: 1px solid rgba(34, 211, 238, 0.55); color: #a7f3d0;
+    }
     .btn-ghost { background: var(--card-2); border: 1px solid var(--border); color: var(--text); }
     .btn-danger { background: rgba(251, 113, 133, 0.16); border: 1px solid rgba(251, 113, 133, 0.35); color: var(--rose); }
 
@@ -61,7 +97,7 @@
     }
     input:focus, select:focus { border-color: var(--primary); }
 
-    /* Cards */
+    /* ================= CARDS ================= */
     .card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 16px; padding: 16px; margin-bottom: 14px;
@@ -75,13 +111,14 @@
     /* Big Scan & Upload Grid */
     .scan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .big-scan-btn {
-      padding: 16px 10px; border-radius: 14px; font-size: 13px; font-weight: 800;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 15px 10px; border-radius: 14px; font-size: 13px; font-weight: 800;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
     }
-    .big-scan-btn span.emoji { font-size: 28px; }
+    .big-scan-btn span.emoji { font-size: 26px; }
 
+    .ai-bar { display: flex; gap: 8px; margin-bottom: 10px; }
     .add-row { display: grid; grid-template-columns: 1.5fr 1fr auto; gap: 8px; }
-    @media (max-width: 520px) {
+    @media (max-width: 540px) {
       .add-row { grid-template-columns: 1fr; }
     }
 
@@ -123,7 +160,55 @@
     .med-title { font-size: 13px; font-weight: 600; }
     .med-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-    /* Modal */
+    /* ================= AI HEALTH CHAT DRAWER ================= */
+    .drawer-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
+      z-index: 9850;
+    }
+    .drawer-backdrop.show { display: block; }
+    .ai-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 100%; max-width: 400px;
+      background: #091513; border-left: 1px solid rgba(34, 211, 238, 0.35);
+      z-index: 9860; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.25s ease;
+    }
+    .ai-drawer.open { transform: translateX(0); }
+    .ai-drawer-head {
+      padding: 14px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card);
+    }
+    .ai-messages {
+      flex: 1; overflow-y: auto; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .bubble {
+      max-width: 85%; padding: 10px 13px; border-radius: 14px;
+      font-size: 12.5px; line-height: 1.5; white-space: pre-wrap;
+    }
+    .bubble.ai {
+      align-self: flex-start; background: var(--card-2);
+      border: 1px solid rgba(16, 185, 129, 0.3); color: var(--text);
+    }
+    .bubble.user {
+      align-self: flex-end; background: var(--primary); color: #fff; font-weight: 600;
+    }
+    .ai-chips {
+      padding: 8px 12px; display: flex; gap: 6px; overflow-x: auto;
+      border-top: 1px solid var(--border);
+    }
+    .chip-btn {
+      background: var(--card-2); border: 1px solid rgba(34, 211, 238, 0.35);
+      color: var(--cyan); padding: 6px 10px; border-radius: 8px;
+      font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer;
+    }
+    .ai-foot {
+      padding: 10px 12px 14px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; background: var(--card);
+    }
+
+    /* Modals */
     .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
       z-index: 9900; justify-content: center; align-items: center; padding: 16px;
@@ -138,39 +223,74 @@
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: var(--primary); color: #fff; padding: 10px 18px; border-radius: 10px;
       font-size: 12px; font-weight: 700; display: none; z-index: 10000;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <!-- ==================== 1. LOGIN & SIGN UP SCREEN ==================== -->
+  <div id="authScreen" class="auth-wrapper">
+    <div class="auth-card">
+      <div style="text-align:center; margin-bottom:18px;">
+        <div style="font-size:44px; margin-bottom:6px;">💊</div>
+        <h1 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:24px; font-weight:800;">MediRemind AI</h1>
+        <p style="font-size:12px; color:var(--muted); margin-top:4px;">Smart Medicine Reminder & AI Prescription Assistant</p>
+      </div>
+
+      <button type="button" id="googleLoginBtn" class="google-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style="width:18px;" />
+        <span>Continue with Google</span>
+      </button>
+
+      <div class="divider">or continue with email</div>
+
+      <form id="emailAuthForm" style="display:flex; flex-direction:column; gap:10px;">
+        <input type="text" id="authNameInput" placeholder="Your Full Name (for Sign Up)" />
+        <input type="email" id="authEmailInput" placeholder="Email address" required />
+        <input type="password" id="authPassInput" placeholder="Password (min 6 characters)" minlength="6" required />
+        <button type="submit" id="authSubmitBtn" class="btn btn-primary" style="width:100%; padding:13px; font-size:13px;">
+          Create Account / Sign In →
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:12px;">
+        <button type="button" id="toggleAuthModeBtn" style="background:none; border:none; color:var(--cyan); font-size:12px; font-weight:600; cursor:pointer;">
+          Already have an account? Switch to Sign In
+        </button>
+      </div>
+
+      <p id="authErrorMsg" class="hidden" style="margin-top:10px; padding:9px; border-radius:9px; background:rgba(251,113,133,0.15); color:var(--rose); font-size:12px; text-align:center;"></p>
+    </div>
+  </div>
+
+  <!-- ==================== 2. MAIN DASHBOARD ==================== -->
+  <div id="dashboardContainer" class="container hidden">
 
     <!-- Top Header -->
     <div class="topbar">
       <div>
         <div class="brand-title">💊 MediRemind AI</div>
-        <div class="brand-sub" id="nextAlarmText">Next Dose: Morning at 08:30</div>
+        <div class="brand-sub" id="userSubtitle">Welcome • Next Dose: 08:30</div>
       </div>
       <div class="top-btns">
+        <button type="button" id="openAiChatBtn" class="btn btn-ai">✨ AI Health Chat</button>
         <button type="button" id="enableNotifBtn" class="btn btn-cyan">🔔 Enable Alert</button>
         <button type="button" id="testAlarmBtn" class="btn btn-primary">🔊 Test Alarm</button>
-        <button type="button" id="cloudSyncBtn" class="btn btn-ghost">☁️ Sync</button>
-        <button type="button" id="openKeyModalBtn" class="btn btn-ghost" title="API Key">⚙️</button>
+        <button type="button" id="openKeyModalBtn" class="btn btn-ghost" title="Gemini API Key">⚙️</button>
+        <button type="button" id="logoutBtn" class="btn btn-danger">Logout</button>
       </div>
     </div>
 
-    <!-- Step 1: Scan or Upload Prescription / Add Medicine -->
+    <!-- Step 1: AI Prescription Scanner & Smart Entry -->
     <div class="card" style="border-color: rgba(34, 211, 238, 0.38);">
       <div class="card-head">
         <span class="card-title" style="color:var(--cyan);">1. Scan Prescription or Add Medicine</span>
       </div>
 
-      <!-- Hidden File Inputs -->
       <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
       <input type="file" id="galleryInput" accept="image/*" class="hidden" />
 
-      <!-- Two Big Clear Buttons -->
+      <!-- Camera & Upload Buttons -->
       <div class="scan-grid">
         <button type="button" id="scanCameraBtn" class="btn btn-primary big-scan-btn">
           <span class="emoji">📷</span>
@@ -178,13 +298,19 @@
         </button>
         <button type="button" id="uploadGalleryBtn" class="btn btn-cyan big-scan-btn">
           <span class="emoji">🖼️</span>
-          <span>Upload Photo</span>
+          <span>Upload Prescription</span>
         </button>
+      </div>
+
+      <!-- AI Natural Language Input -->
+      <div class="ai-bar">
+        <input type="text" id="aiTextEntryInput" placeholder='AI Smart Add: e.g. "Paracetamol 500mg morning and night"' />
+        <button type="button" id="aiTextAddBtn" class="btn btn-ai" style="flex-shrink:0;">✨ AI Add</button>
       </div>
 
       <!-- Manual Quick Add -->
       <div class="add-row">
-        <input type="text" id="medNameInput" placeholder="Medicine name (e.g. Paracetamol 500mg)" />
+        <input type="text" id="medNameInput" placeholder="Or type medicine name manually..." />
         <select id="medSlotSelect">
           <option value="Morning">🌅 Morning</option>
           <option value="Noon">☀️ Noon</option>
@@ -197,29 +323,44 @@
       <div id="aiScanStatus" class="status-banner hidden"></div>
     </div>
 
-    <!-- Step 2: Today's 4 Dose Schedules -->
+    <!-- Step 2: 4 Dose Schedules & Alarms -->
     <div class="card-head" style="padding: 0 4px;">
       <span class="card-title">2. Daily Medicine Schedule & Alarms</span>
-      <span style="font-size:11px; color:var(--muted);">Tap time to change alarm</span>
+      <span style="font-size:11px; color:var(--muted);">Tap time to edit alarm</span>
     </div>
 
     <div class="slots-grid" id="scheduleGrid"></div>
 
-    <!-- Step 3: Simple AI Medicine Helper -->
-    <div class="card" style="margin-top:14px;">
-      <div class="card-head">
-        <span class="card-title" style="color:var(--primary);">✨ Ask MediRemind AI</span>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="aiQuestionInput" placeholder="Ask about today's medicines or dosages..." />
-        <button type="button" id="aiAskBtn" class="btn btn-primary">Ask</button>
-      </div>
-      <div id="aiAnswerBox" class="status-banner hidden"></div>
-    </div>
-
   </div>
 
-  <!-- Live Alarm Popup Modal -->
+  <!-- ==================== 3. AI HEALTH CHAT SIDE DRAWER ==================== -->
+  <div id="aiBackdrop" class="drawer-backdrop"></div>
+  <aside id="aiDrawer" class="ai-drawer">
+    <div class="ai-drawer-head">
+      <div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:800; color:var(--cyan);">✨ MediRemind AI Assistant</div>
+        <div style="font-size:10px; color:var(--muted);">Synced with your live medicine schedule</div>
+      </div>
+      <button type="button" id="closeAiChatBtn" class="btn btn-ghost" style="padding:5px 10px;">✕</button>
+    </div>
+
+    <div id="aiChatMessages" class="ai-messages">
+      <div class="bubble ai">💊 Hi! I am MediRemind AI. Ask me about today's Morning, Noon, Afternoon, or Night medicines, dosage timing, or side effects in English, Bengali, or Hindi!</div>
+    </div>
+
+    <div class="ai-chips">
+      <button type="button" class="chip-btn" data-q="What medicines are scheduled for me today?">💊 Today's Doses</button>
+      <button type="button" class="chip-btn" data-q="Which medicines have I not taken yet today?">⏰ Pending Meds</button>
+      <button type="button" class="chip-btn" data-q="Check my medicine list and give safety tips.">🩺 Safety Check</button>
+    </div>
+
+    <form id="aiChatForm" class="ai-foot">
+      <input type="text" id="aiChatInput" placeholder="Ask MediRemind AI..." required style="flex:1;" />
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+  </aside>
+
+  <!-- ==================== 4. LIVE ALARM POPUP MODAL ==================== -->
   <div id="alarmModal" class="modal-overlay" style="z-index:9999;">
     <div class="modal-box" style="text-align:center; border:2px solid var(--cyan);">
       <div style="font-size:46px; margin-bottom:8px;">💊🔔</div>
@@ -230,32 +371,15 @@
     </div>
   </div>
 
-  <!-- Cloud Sync Login Modal -->
-  <div id="authModal" class="modal-overlay">
-    <div class="modal-box" style="text-align:center;">
-      <div class="card-head">
-        <span class="card-title" style="color:var(--cyan);">☁️ Cloud Sync Account</span>
-        <button type="button" id="closeAuthModalBtn" class="btn btn-ghost" style="padding:4px 9px;">✕</button>
-      </div>
-      <p id="cloudUserStatus" style="font-size:12px; color:var(--muted); margin-bottom:12px;">Sign in to sync your medicine schedule across devices.</p>
-      <button type="button" id="googleLoginBtn" class="btn" style="width:100%; background:#fff; color:#06100e; padding:12px; font-size:13px;">
-        Continue with Google
-      </button>
-      <button type="button" id="signOutBtn" class="btn btn-danger hidden" style="width:100%; margin-top:10px; padding:11px;">
-        Sign Out
-      </button>
-    </div>
-  </div>
-
-  <!-- Gemini API Key Modal -->
+  <!-- ==================== 5. GEMINI API KEY MODAL ==================== -->
   <div id="keyModal" class="modal-overlay">
     <div class="modal-box">
       <div class="card-head">
         <span class="card-title" style="color:var(--cyan);">⚙️ Gemini AI API Key</span>
         <button type="button" id="closeKeyModalBtn" class="btn btn-ghost" style="padding:4px 9px;">✕</button>
       </div>
-      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Paste your working AIzaSy... Gemini API key here (optional if default key is active):</p>
-      <input type="text" id="geminiKeyInput" placeholder="Paste AIzaSy... key" style="margin-bottom:12px;" />
+      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Paste your AIzaSy... key from Google AI Studio so prescription scan & AI Chat work:</p>
+      <input type="text" id="geminiKeyInput" placeholder="Paste AIzaSy... key here" style="margin-bottom:12px;" />
       <button type="button" id="saveGeminiKeyBtn" class="btn btn-primary" style="width:100%;">Save API Key</button>
     </div>
   </div>
@@ -263,6 +387,22 @@
   <div id="toast"></div>
 
   <script type="module">
+    import { auth, db, runGeminiAI } from "./firebase-config.js?v=6";
+    import {
+      GoogleAuthProvider,
+      signInWithPopup,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      updateProfile,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      doc,
+      setDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
     const SLOTS = [
       { key: "Morning", icon: "🌅", defaultTime: "08:30" },
       { key: "Noon", icon: "☀️", defaultTime: "13:30" },
@@ -270,27 +410,16 @@
       { key: "Night", icon: "🌙", defaultTime: "21:30" }
     ];
 
-    const LOCAL_KEY = "mediremind_v5_data";
+    let currentUser = null;
+    let isSignUpMode = true;
+    let unsubFirestore = null;
+    let triggeredToday = new Set();
+
     let scheduleData = {
       alarms: { Morning: "08:30", Noon: "13:30", Afternoon: "17:30", Night: "21:30" },
       medicines: []
     };
 
-    try {
-      const saved = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null");
-      if (saved && saved.alarms) {
-        scheduleData = {
-          alarms: { ...scheduleData.alarms, ...saved.alarms },
-          medicines: Array.isArray(saved.medicines) ? saved.medicines : []
-        };
-      }
-    } catch (e) {}
-
-    let fbModule = null;
-    let currentUser = null;
-    let triggeredToday = new Set();
-
-    // Register Service Worker for Android Status Bar Notifications
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
     }
@@ -315,16 +444,119 @@
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
-    async function saveSchedule() {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(scheduleData));
-      if (fbModule && currentUser) {
-        try {
-          const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-          await setDoc(doc(fbModule.db, "users", currentUser.uid, "medData", "main"), scheduleData, { merge: true });
-        } catch (e) {}
+    // ==================== AUTHENTICATION (LOGIN & SIGN UP) ====================
+    document.getElementById("toggleAuthModeBtn").onclick = () => {
+      isSignUpMode = !isSignUpMode;
+      document.getElementById("authNameInput").classList.toggle("hidden", !isSignUpMode);
+      document.getElementById("authSubmitBtn").innerText = isSignUpMode ? "Create Account →" : "Sign In →";
+      document.getElementById("toggleAuthModeBtn").innerText = isSignUpMode
+        ? "Already have an account? Switch to Sign In"
+        : "New user? Switch to Create Account";
+    };
+
+    document.getElementById("googleLoginBtn").onclick = async () => {
+      const errEl = document.getElementById("authErrorMsg");
+      errEl.classList.add("hidden");
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (err) {
+        errEl.innerText = err.message || "Google Sign-In failed.";
+        errEl.classList.remove("hidden");
       }
+    };
+
+    document.getElementById("emailAuthForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("authNameInput").value.trim();
+      const email = document.getElementById("authEmailInput").value.trim();
+      const pass = document.getElementById("authPassInput").value;
+      const errEl = document.getElementById("authErrorMsg");
+      errEl.classList.add("hidden");
+
+      try {
+        if (isSignUpMode) {
+          const cred = await createUserWithEmailAndPassword(auth, email, pass);
+          if (name) await updateProfile(cred.user, { displayName: name });
+          showToast("Account created!");
+        } else {
+          await signInWithEmailAndPassword(auth, email, pass);
+          showToast("Signed in!");
+        }
+      } catch (err) {
+        if (err.code === "auth/email-already-in-use") {
+          try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            return;
+          } catch (e2) {
+            errEl.innerText = e2.message;
+          }
+        } else {
+          errEl.innerText = err.message;
+        }
+        errEl.classList.remove("hidden");
+      }
+    };
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      if (unsubFirestore) unsubFirestore();
+      await signOut(auth);
+      showToast("Logged out");
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (!user) {
+        document.getElementById("authScreen").classList.remove("hidden");
+        document.getElementById("dashboardContainer").classList.add("hidden");
+        return;
+      }
+
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("dashboardContainer").classList.remove("hidden");
+
+      const displayName = user.displayName || user.email.split("@")[0];
+      document.getElementById("userSubtitle").dataset.userName = displayName;
+
+      // Load local cache instantly
+      try {
+        const cached = JSON.parse(localStorage.getItem(`mediremind_data_${user.uid}`) || "null");
+        if (cached && cached.alarms) {
+          scheduleData = {
+            alarms: { ...scheduleData.alarms, ...cached.alarms },
+            medicines: Array.isArray(cached.medicines) ? cached.medicines : []
+          };
+        }
+      } catch (e) {}
+
+      renderScheduleGrid();
+      updateNotifBtn();
+
+      // Subscribe to Firestore cloud sync
+      if (unsubFirestore) unsubFirestore();
+      unsubFirestore = onSnapshot(doc(db, "users", user.uid, "medData", "main"), (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          scheduleData = {
+            alarms: { ...scheduleData.alarms, ...(d.alarms || {}) },
+            medicines: Array.isArray(d.medicines) ? d.medicines : []
+          };
+          localStorage.setItem(`mediremind_data_${user.uid}`, JSON.stringify(scheduleData));
+          renderScheduleGrid();
+        } else {
+          saveSchedule();
+        }
+      });
+    });
+
+    async function saveSchedule() {
+      if (!currentUser) return;
+      localStorage.setItem(`mediremind_data_${currentUser.uid}`, JSON.stringify(scheduleData));
+      try {
+        await setDoc(doc(db, "users", currentUser.uid, "medData", "main"), scheduleData, { merge: true });
+      } catch (e) {}
     }
 
+    // ==================== RENDER 4 DOSE CARDS ====================
     function renderScheduleGrid() {
       const grid = document.getElementById("scheduleGrid");
       grid.innerHTML = "";
@@ -400,7 +632,7 @@
       updateNextAlarmBanner();
     }
 
-    // Manual Quick Add
+    // Manual Add
     document.getElementById("quickAddBtn").onclick = async () => {
       const nameInp = document.getElementById("medNameInput");
       const slotSel = document.getElementById("medSlotSelect");
@@ -420,7 +652,61 @@
       showToast(`Added ${name} to ${slot}`);
     };
 
-    // Camera & Gallery Prescription Scan
+    // ==================== AI SMART TEXT & CAMERA/PHOTO PRESCRIPTION SCAN ====================
+    function addScannedMedicinesList(list) {
+      let added = 0;
+      const labels = [];
+      list.forEach((item) => {
+        const mName = String(item.name || "").trim();
+        const slot = SLOTS.some((s) => s.key === item.slot) ? item.slot : "Morning";
+        if (mName && !scheduleData.medicines.some((m) => m.name.toLowerCase() === mName.toLowerCase() && m.slot === slot)) {
+          scheduleData.medicines.push({
+            id: `med_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            name: mName,
+            slot,
+            takenDate: ""
+          });
+          labels.push(`${mName} (${slot})`);
+          added++;
+        }
+      });
+      return { added, labels };
+    }
+
+    document.getElementById("aiTextAddBtn").onclick = async () => {
+      const inp = document.getElementById("aiTextEntryInput");
+      const statusEl = document.getElementById("aiScanStatus");
+      const text = inp.value.trim();
+      if (!text) return;
+
+      statusEl.innerText = "✨ AI is scheduling your medicines...";
+      statusEl.classList.remove("hidden");
+
+      const prompt = `Extract medicines and dose time slots from: "${text}".
+Allowed slots: ["Morning", "Noon", "Afternoon", "Night"].
+If a medicine is taken multiple times (e.g. morning and night, or 1-0-1), create separate items for each slot.
+Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Morning"}]}`;
+
+      const { text: reply, error } = await runGeminiAI({ parts: [{ text: prompt }], jsonMode: true });
+      if (!reply) {
+        statusEl.innerText = `⚠️ ${error}`;
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(reply.match(/\{[\s\S]*\}/)[0]);
+        const { added, labels } = addScannedMedicinesList(parsed.medicines || []);
+        inp.value = "";
+        renderScheduleGrid();
+        await saveSchedule();
+        statusEl.innerText = added > 0
+          ? `✅ Scheduled ${added} dose(s): ${labels.join(", ")}`
+          : "✅ Already in your schedule.";
+      } catch (e) {
+        statusEl.innerText = "⚠️ Could not parse medicines. Try again.";
+      }
+    };
+
     document.getElementById("scanCameraBtn").onclick = () => document.getElementById("cameraInput").click();
     document.getElementById("uploadGalleryBtn").onclick = () => document.getElementById("galleryInput").click();
 
@@ -457,19 +743,14 @@
       statusEl.innerText = "📷 Scanning prescription with MediRemind AI...";
       statusEl.classList.remove("hidden");
 
-      if (!fbModule || !fbModule.runGeminiAI) {
-        statusEl.innerText = "⚠️ AI module still loading. Try again in 2 seconds.";
-        return;
-      }
-
       try {
         const imgData = await compressImage(file);
         const prompt = `Read this doctor prescription, medicine strip, or pharmacy bill.
-Extract each medicine name (with dosage if shown, e.g. "Paracetamol 500mg") and assign it to time slots from ["Morning", "Noon", "Afternoon", "Night"].
+Extract each medicine name (with dosage if visible, e.g. "Paracetamol 500mg") and assign it to time slots from ["Morning", "Noon", "Afternoon", "Night"].
 If frequency is 1-0-1, add one entry for "Morning" and one for "Night". If 1-1-1, add "Morning", "Noon", and "Night". Default to "Morning" if unspecified.
 Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Morning"}]}`;
 
-        const { text, error } = await fbModule.runGeminiAI({
+        const { text: reply, error } = await runGeminiAI({
           parts: [
             { text: prompt },
             { inline_data: { mime_type: imgData.mime, data: imgData.base64 } }
@@ -477,37 +758,19 @@ Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Mornin
           jsonMode: true
         });
 
-        if (!text) {
-          statusEl.innerText = `⚠️ ${error || "Could not scan image. Check API key in ⚙️ Settings."}`;
+        if (!reply) {
+          statusEl.innerText = `⚠️ ${error}`;
           return;
         }
 
-        const match = text.match(/\{[\s\S]*\}/);
-        const parsed = match ? JSON.parse(match[0]) : null;
+        const parsed = JSON.parse(reply.match(/\{[\s\S]*\}/)[0]);
         const list = Array.isArray(parsed?.medicines) ? parsed.medicines : [];
-
         if (list.length === 0) {
           statusEl.innerText = "⚠️ No medicines detected. Try a clearer photo.";
           return;
         }
 
-        let added = 0;
-        const labels = [];
-        list.forEach((item) => {
-          const mName = String(item.name || "").trim();
-          const slot = SLOTS.some((s) => s.key === item.slot) ? item.slot : "Morning";
-          if (mName && !scheduleData.medicines.some((m) => m.name.toLowerCase() === mName.toLowerCase() && m.slot === slot)) {
-            scheduleData.medicines.push({
-              id: `med_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-              name: mName,
-              slot,
-              takenDate: ""
-            });
-            labels.push(`${mName} (${slot})`);
-            added++;
-          }
-        });
-
+        const { added, labels } = addScannedMedicinesList(list);
         renderScheduleGrid();
         await saveSchedule();
         statusEl.innerText = added > 0
@@ -521,7 +784,61 @@ Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Mornin
     document.getElementById("cameraInput").onchange = (e) => { handlePrescriptionImage(e.target.files[0]); e.target.value = ""; };
     document.getElementById("galleryInput").onchange = (e) => { handlePrescriptionImage(e.target.files[0]); e.target.value = ""; };
 
-    // Real Browser Notification + Chime + Voice Alert
+    // ==================== AI HEALTH CHAT DRAWER ====================
+    const aiDrawer = document.getElementById("aiDrawer");
+    const aiBackdrop = document.getElementById("aiBackdrop");
+
+    document.getElementById("openAiChatBtn").onclick = () => {
+      aiBackdrop.classList.add("show");
+      aiDrawer.classList.add("open");
+      setTimeout(() => document.getElementById("aiChatInput").focus(), 150);
+    };
+    const closeDrawer = () => {
+      aiBackdrop.classList.remove("show");
+      aiDrawer.classList.remove("open");
+    };
+    document.getElementById("closeAiChatBtn").onclick = closeDrawer;
+    aiBackdrop.onclick = closeDrawer;
+
+    function addChatBubble(role, text) {
+      const box = document.getElementById("aiChatMessages");
+      const div = document.createElement("div");
+      div.className = `bubble ${role}`;
+      div.innerText = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    async function sendAiChatQuestion(qText) {
+      const q = qText.trim();
+      if (!q) return;
+      addChatBubble("user", q);
+      const botBubble = addChatBubble("ai", "Checking your medicine schedule...");
+
+      const prompt = `You are MediRemind AI, a smart healthcare & medicine reminder assistant.
+Today's date: ${getTodayDateStr()}
+User's live medicine schedule: ${JSON.stringify(scheduleData)}
+User question: "${q}"
+Answer helpfully and concisely in the exact language the user asked (English, Bengali, or Hindi).`;
+
+      const { text, error } = await runGeminiAI({ parts: [{ text: prompt }] });
+      botBubble.innerText = text || `⚠️ ${error}`;
+    }
+
+    document.getElementById("aiChatForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const inp = document.getElementById("aiChatInput");
+      const val = inp.value;
+      inp.value = "";
+      await sendAiChatQuestion(val);
+    };
+
+    document.querySelectorAll(".chip-btn").forEach((c) => {
+      c.onclick = () => sendAiChatQuestion(c.dataset.q);
+    });
+
+    // ==================== NOTIFICATIONS, CHIME & VOICE ALARM ====================
     function updateNotifBtn() {
       const btn = document.getElementById("enableNotifBtn");
       if (!("Notification" in window)) {
@@ -613,16 +930,18 @@ Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Mornin
     };
 
     function updateNextAlarmBanner() {
+      const subEl = document.getElementById("userSubtitle");
+      const uName = subEl.dataset.userName || "User";
       const now = new Date();
       const curHM = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
       for (const s of SLOTS) {
         const t = scheduleData.alarms[s.key] || s.defaultTime;
         if (t >= curHM) {
-          document.getElementById("nextAlarmText").innerText = `Next Dose: ${s.key} at ${t}`;
+          subEl.innerText = `${uName} • Next Dose: ${s.key} at ${t}`;
           return;
         }
       }
-      document.getElementById("nextAlarmText").innerText = `Next Dose: Tomorrow Morning at ${scheduleData.alarms.Morning || "08:30"}`;
+      subEl.innerText = `${uName} • Next Dose: Tomorrow ${scheduleData.alarms.Morning || "08:30"}`;
     }
 
     setInterval(() => {
@@ -645,39 +964,7 @@ Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Mornin
       });
     }, 10000);
 
-    // Ask AI Helper
-    document.getElementById("aiAskBtn").onclick = async () => {
-      const inp = document.getElementById("aiQuestionInput");
-      const out = document.getElementById("aiAnswerBox");
-      const q = inp.value.trim();
-      if (!q) return;
-
-      out.innerText = "✨ MediRemind AI is thinking...";
-      out.classList.remove("hidden");
-
-      if (!fbModule || !fbModule.runGeminiAI) {
-        out.innerText = "⚠️ AI module loading. Try again in 2 seconds.";
-        return;
-      }
-
-      const { text, error } = await fbModule.runGeminiAI({
-        parts: [{
-          text: `You are MediRemind AI. Current user medicine schedule: ${JSON.stringify(scheduleData)}. Question: "${q}". Reply clearly in under 60 words in the same language (English, Bengali, or Hindi).`
-        }]
-      });
-
-      if (text) {
-        inp.value = "";
-        out.innerText = `💊 ${text}`;
-      } else {
-        out.innerText = `⚠️ ${error || "Check Gemini API key in ⚙️ Settings."}`;
-      }
-    };
-
-    // Modals (Cloud Sync & API Key)
-    document.getElementById("cloudSyncBtn").onclick = () => document.getElementById("authModal").classList.add("show");
-    document.getElementById("closeAuthModalBtn").onclick = () => document.getElementById("authModal").classList.remove("show");
-
+    // API Key Modal
     document.getElementById("openKeyModalBtn").onclick = () => {
       document.getElementById("geminiKeyInput").value = localStorage.getItem("mediremind_gemini_key") || "";
       document.getElementById("keyModal").classList.add("show");
@@ -691,72 +978,10 @@ Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Mornin
         showToast("Gemini API Key Saved!");
       } else {
         localStorage.removeItem("mediremind_gemini_key");
-        showToast("Using default API key");
+        showToast("Cleared custom key");
       }
       document.getElementById("keyModal").classList.remove("show");
     };
-
-    // Initial Instant Render
-    renderScheduleGrid();
-    updateNotifBtn();
-
-    // Non-blocking Background Firebase Connection
-    (async () => {
-      try {
-        fbModule = await import("./firebase-config.js?v=5");
-        const { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import(
-          "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
-        );
-        const { doc, onSnapshot } = await import(
-          "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
-        );
-
-        document.getElementById("googleLoginBtn").onclick = async () => {
-          try {
-            await signInWithPopup(fbModule.auth, new GoogleAuthProvider());
-            document.getElementById("authModal").classList.remove("show");
-            showToast("Cloud Sync Connected!");
-          } catch (e) {
-            showToast(e.message, true);
-          }
-        };
-
-        document.getElementById("signOutBtn").onclick = async () => {
-          await signOut(fbModule.auth);
-          showToast("Signed out");
-        };
-
-        onAuthStateChanged(fbModule.auth, (user) => {
-          currentUser = user;
-          const statusTxt = document.getElementById("cloudUserStatus");
-          const outBtn = document.getElementById("signOutBtn");
-          const syncBtn = document.getElementById("cloudSyncBtn");
-
-          if (user) {
-            statusTxt.innerText = `Synced as: ${user.email}`;
-            outBtn.classList.remove("hidden");
-            syncBtn.innerText = "☁️ Synced";
-            onSnapshot(doc(fbModule.db, "users", user.uid, "medData", "main"), (snap) => {
-              if (snap.exists()) {
-                const d = snap.data();
-                scheduleData = {
-                  alarms: { ...scheduleData.alarms, ...(d.alarms || {}) },
-                  medicines: Array.isArray(d.medicines) ? d.medicines : scheduleData.medicines
-                };
-                localStorage.setItem(LOCAL_KEY, JSON.stringify(scheduleData));
-                renderScheduleGrid();
-              }
-            });
-          } else {
-            statusTxt.innerText = "Sign in to sync your medicine schedule across devices.";
-            outBtn.classList.add("hidden");
-            syncBtn.innerText = "☁️ Sync";
-          }
-        });
-      } catch (err) {
-        console.warn("Firebase background init:", err);
-      }
-    })();
   </script>
 </body>
 </html>
