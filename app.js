@@ -1,5 +1,5 @@
-// app.js — MediRemind AI Pro Max Engine (Direct Audio Mic + Instant Pharmacy Links)
-import { auth, db, runGeminiAI } from "./firebase-config.js?v=11";
+// app.js — MediRemind AI Pro Max Engine (Themes, Language, Voice Mic, Pharmacy Links & Cloud Sync)
+import { auth, db, runGeminiAI } from "./firebase-config.js?v=12";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -32,6 +32,19 @@ let isSignUpMode = true;
 let unsubMainDoc = null;
 let triggeredToday = new Set();
 
+// User Pro Preferences
+let userPrefs = {
+  theme: "emerald",
+  language: "auto",
+  alarmMode: "both",
+  budgetLimit: 3000
+};
+
+try {
+  const savedPrefs = JSON.parse(localStorage.getItem("mediremind_pro_prefs") || "null");
+  if (savedPrefs) userPrefs = { ...userPrefs, ...savedPrefs };
+} catch (e) {}
+
 // Multi-Member & Medicine State
 let appState = {
   members: ["Me"],
@@ -52,12 +65,26 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 
+// ==================== THEME & PREFERENCES ENGINE ====================
+function applyVisualTheme(themeName) {
+  document.body.classList.remove("theme-ocean", "theme-violet", "theme-light");
+  if (themeName === "ocean") document.body.classList.add("theme-ocean");
+  else if (themeName === "violet") document.body.classList.add("theme-violet");
+  else if (themeName === "light") document.body.classList.add("theme-light");
+
+  document.querySelectorAll(".theme-opt").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.theme === themeName);
+  });
+}
+
+applyVisualTheme(userPrefs.theme);
+
 // ==================== HELPERS ====================
 function showToast(msg, isError = false) {
   const t = document.getElementById("toast");
   if (!t) return;
   t.innerText = msg;
-  t.style.background = isError ? "#fb7185" : "#10b981";
+  t.style.background = isError ? "#fb7185" : "var(--primary)";
   t.style.display = "block";
   clearTimeout(window._toastTimer);
   window._toastTimer = setTimeout(() => {
@@ -77,7 +104,6 @@ function escapeHtml(str) {
 
 function formatRichMessageHtml(rawText) {
   const linkPlaceholders = [];
-  // Extract markdown links first so URLs stay completely intact
   let textWithTokens = String(rawText || "").replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     (_, label, url) => {
@@ -89,7 +115,6 @@ function formatRichMessageHtml(rawText) {
     }
   );
 
-  // Extract standalone raw URLs
   textWithTokens = textWithTokens.replace(
     /(^|[\s(>])(https?:\/\/[^\s<)]+)/g,
     (_, prefix, url) => {
@@ -178,7 +203,7 @@ function openInputPrompt({ title, desc, placeholder = "", defaultValue = "", con
   });
 }
 
-// ==================== 1. AUTHENTICATION ====================
+// ==================== 1. AUTHENTICATION & LOGOUT ====================
 document.getElementById("toggleAuthModeBtn").onclick = () => {
   isSignUpMode = !isSignUpMode;
   document.getElementById("authNameInput").classList.toggle("hidden", !isSignUpMode);
@@ -231,11 +256,18 @@ document.getElementById("emailAuthForm").onsubmit = async (e) => {
   }
 };
 
-document.getElementById("logoutBtn").onclick = async () => {
+async function handleSignOut() {
   if (unsubMainDoc) unsubMainDoc();
+  document.getElementById("settingsModal").classList.remove("show");
   await signOut(auth);
-  showToast("Logged out");
-};
+  showToast("Logged out successfully");
+}
+
+const topLogoutBtn = document.getElementById("topLogoutBtn");
+if (topLogoutBtn) topLogoutBtn.onclick = handleSignOut;
+
+const modalLogoutBtn = document.getElementById("logoutBtn");
+if (modalLogoutBtn) modalLogoutBtn.onclick = handleSignOut;
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
@@ -285,7 +317,7 @@ async function saveAppState() {
   } catch (e) {}
 }
 
-// ==================== 2. FAMILY MEMBERS & LIGHT COST CALCULATION ====================
+// ==================== 2. FAMILY MEMBERS & LIGHT COST / BUDGET ====================
 function renderMemberPills() {
   const wrap = document.getElementById("memberPillsWrap");
   wrap.innerHTML = "";
@@ -352,10 +384,18 @@ function updateLightCostSummary() {
   const totalUnitPrice = meds.reduce((sum, m) => sum + (Number(m.price) || 0), 0);
   const estDaily = Math.round(totalUnitPrice / 10);
   const estMonthly = estDaily * 30;
+  const limit = Number(userPrefs.budgetLimit) || 3000;
 
   document.getElementById("dailyCostLabel").innerText = `${appState.activeMember}'s Est. Daily`;
   document.getElementById("dailyCostVal").innerText = `₹${estDaily}`;
-  document.getElementById("monthlyCostVal").innerText = `₹${estMonthly}`;
+  document.getElementById("monthlyCostVal").innerText = `₹${estMonthly} / ₹${limit}`;
+
+  const fillBar = document.getElementById("budgetFillBar");
+  if (fillBar) {
+    const pct = Math.min((estMonthly / limit) * 100, 100);
+    fillBar.style.width = `${pct}%`;
+    fillBar.style.background = pct > 90 ? "var(--rose)" : "linear-gradient(90deg, var(--cyan), var(--primary))";
+  }
 }
 
 document.getElementById("updateWebPricesBtn").onclick = async () => {
@@ -541,7 +581,6 @@ function addMedicinesToActiveProfile(list) {
   return { added, labels };
 }
 
-// Bulletproof Direct Audio Recording + Gemini Multimodal Audio Processing (Zero SpeechRecognition network errors!)
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecordingAudio = false;
@@ -564,7 +603,6 @@ document.getElementById("voiceMicBtn").onclick = async () => {
   const micLbl = document.getElementById("voiceMicLabel");
   const statusEl = document.getElementById("aiScanStatus");
 
-  // Stop recording if already active
   if (isRecordingAudio && mediaRecorder && mediaRecorder.state === "recording") {
     clearTimeout(autoStopTimer);
     mediaRecorder.stop();
@@ -652,7 +690,6 @@ Return ONLY valid JSON:
     statusEl.innerText = "🔴 Listening... Speak medicine name & time (e.g. 'Paracetamol morning and night'), then tap Stop.";
     statusEl.classList.remove("hidden");
 
-    // Auto-stop after 9 seconds
     autoStopTimer = setTimeout(() => {
       if (isRecordingAudio && mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
@@ -664,7 +701,6 @@ Return ONLY valid JSON:
   }
 };
 
-// AI Natural Language Add (from Text)
 document.getElementById("aiTextAddBtn").onclick = async () => {
   const inp = document.getElementById("aiTextEntryInput");
   const statusEl = document.getElementById("aiScanStatus");
@@ -700,7 +736,6 @@ Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Mornin
   }
 };
 
-// Manual Quick Add
 document.getElementById("quickAddBtn").onclick = async () => {
   const nameInp = document.getElementById("medNameInput");
   const priceInp = document.getElementById("medPriceInput");
@@ -720,7 +755,6 @@ document.getElementById("quickAddBtn").onclick = async () => {
   showToast(`Added ${name} to ${appState.activeMember}'s ${slot}`);
 };
 
-// Camera & Gallery Prescription Scan
 document.getElementById("scanCameraBtn").onclick = () => document.getElementById("cameraInput").click();
 document.getElementById("uploadGalleryBtn").onclick = () => document.getElementById("galleryInput").click();
 
@@ -805,7 +839,7 @@ document.getElementById("galleryInput").onchange = (e) => {
   e.target.value = "";
 };
 
-// ==================== 5. PERSISTENT AI HEALTH CHAT (HISTORY, RENAME, DELETE, MAPS & BUY LINKS) ====================
+// ==================== 5. PERSISTENT AI HEALTH CHAT ====================
 function getChatStorageKey() {
   return `mediremind_promax_chats_${currentUser?.uid || "guest"}`;
 }
@@ -974,7 +1008,6 @@ async function deleteChatById(chatId) {
   showToast("Chat deleted");
 }
 
-// Drawer Controls
 const aiDrawer = document.getElementById("aiDrawer");
 const aiBackdrop = document.getElementById("aiBackdrop");
 
@@ -1002,7 +1035,6 @@ document.getElementById("newChatBtn").onclick = () => {
 document.getElementById("renameChatBtn").onclick = () => renameChatById(activeChatId);
 document.getElementById("deleteChatBtn").onclick = () => deleteChatById(activeChatId);
 
-// Nearest Medical Store Button
 document.getElementById("findStoreChip").onclick = () => {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
@@ -1044,7 +1076,6 @@ async function sendAiChatMessage(userText, forceSearch = false) {
   renderActiveChat();
   renderChatHistory();
 
-  // Instant Direct Online Buy Links Handler (Zero truncation, works even if schedule is empty!)
   const lowerQ = q.toLowerCase();
   const isBuyRequest =
     lowerQ.includes("buy") ||
@@ -1071,7 +1102,6 @@ async function sendAiChatMessage(userText, forceSearch = false) {
       renderActiveChat();
       return;
     } else {
-      // Ask AI to extract medicine name from user's prompt, or show sample links if none mentioned
       const { text: extracted } = await runGeminiAI({
         parts: [
           {
@@ -1087,8 +1117,7 @@ async function sendAiChatMessage(userText, forceSearch = false) {
       } catch (e) {}
 
       if (askedMeds.length > 0) {
-        const linksReply =
-          `🛒 **Direct Online Purchase Links:**\n\n` + buildPharmacyLinksBlock(askedMeds);
+        const linksReply = `🛒 **Direct Online Purchase Links:**\n\n` + buildPharmacyLinksBlock(askedMeds);
         session.messages.push({ role: "ai", text: linksReply });
         session.updatedAt = Date.now();
         saveChatsLocal();
@@ -1117,12 +1146,17 @@ async function sendAiChatMessage(userText, forceSearch = false) {
   box.appendChild(loadingDiv);
   box.scrollTop = box.scrollHeight;
 
+  const langRule =
+    userPrefs.language === "auto"
+      ? "Reply in the exact language the user asked (English, Bengali, or Hindi)."
+      : `Reply primarily in ${userPrefs.language}.`;
+
   const systemInstruction = `You are MediRemind AI Pro Max, a medical reminder and pharmacy assistant.
 Family Profiles & Live Medicine Data: ${JSON.stringify(appState)}
 Active Member: ${appState.activeMember}
 
 RULES:
-1. Reply in the exact language the user asked (English, Bengali, or Hindi).
+1. ${langRule}
 2. If the user asks for nearest medical stores, include a clickable markdown link [Open Nearest Medical Stores in Google Maps](https://www.google.com/maps/search/medical+store+pharmacy+near+me).
 3. Keep answers concise, accurate, and complete.`;
 
@@ -1197,8 +1231,8 @@ document.getElementById("enableNotifBtn").onclick = async () => {
 };
 
 function playChime() {
+  if (userPrefs.alarmMode === "vibrate") return;
   try {
-    if ("vibrate" in navigator) navigator.vibrate([300, 150, 300, 150, 400]);
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
@@ -1219,6 +1253,7 @@ function playChime() {
 }
 
 function speakDose(memberName, slotKey, meds) {
+  if (userPrefs.alarmMode !== "both") return;
   try {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
@@ -1231,6 +1266,7 @@ function speakDose(memberName, slotKey, meds) {
 }
 
 function triggerDoseAlarm(memberName, slotKey, medsText) {
+  if ("vibrate" in navigator) navigator.vibrate([300, 150, 300, 150, 400]);
   playChime();
   speakDose(memberName, slotKey, medsText);
   sendSystemNotification(`💊 ${memberName} — ${slotKey} Dose`, `Time to take: ${medsText}`);
@@ -1301,21 +1337,63 @@ setInterval(() => {
   });
 }, 10000);
 
-// API Key Modal
-document.getElementById("openKeyModalBtn").onclick = () => {
-  document.getElementById("geminiKeyInput").value = localStorage.getItem("mediremind_gemini_key") || "";
-  document.getElementById("keyModal").classList.add("show");
+// ==================== 7. PRO SETTINGS MODAL CONTROLS ====================
+document.getElementById("openSettingsModalBtn").onclick = () => {
+  applyVisualTheme(userPrefs.theme);
+  document.getElementById("settingLangSelect").value = userPrefs.language || "auto";
+  document.getElementById("settingAlarmModeSelect").value = userPrefs.alarmMode || "both";
+  document.getElementById("settingBudgetInput").value = userPrefs.budgetLimit || 3000;
+  document.getElementById("settingsModal").classList.add("show");
 };
-document.getElementById("closeKeyModalBtn").onclick = () => document.getElementById("keyModal").classList.remove("show");
 
-document.getElementById("saveGeminiKeyBtn").onclick = () => {
-  const val = document.getElementById("geminiKeyInput").value.trim();
-  if (val) {
-    localStorage.setItem("mediremind_gemini_key", val);
-    showToast("Custom Gemini API Key Saved!");
-  } else {
-    localStorage.removeItem("mediremind_gemini_key");
-    showToast("Using built-in Gemini API Key");
+document.getElementById("closeSettingsBtn").onclick = () => {
+  document.getElementById("settingsModal").classList.remove("show");
+};
+
+document.querySelectorAll(".theme-opt").forEach((btn) => {
+  btn.onclick = () => {
+    const selectedTheme = btn.dataset.theme;
+    userPrefs.theme = selectedTheme;
+    applyVisualTheme(selectedTheme);
+  };
+});
+
+document.getElementById("saveProSettingsBtn").onclick = () => {
+  userPrefs.language = document.getElementById("settingLangSelect").value;
+  userPrefs.alarmMode = document.getElementById("settingAlarmModeSelect").value;
+  userPrefs.budgetLimit = Number(document.getElementById("settingBudgetInput").value) || 3000;
+
+  localStorage.setItem("mediremind_pro_prefs", JSON.stringify(userPrefs));
+  updateLightCostSummary();
+  document.getElementById("settingsModal").classList.remove("show");
+  showToast("Pro Preferences Saved!");
+};
+
+document.getElementById("copyDoctorReportBtn").onclick = async () => {
+  const profile = getActiveProfile();
+  const meds = profile.medicines || [];
+  if (meds.length === 0) return showToast("No medicines to copy", true);
+
+  const lines = [`💊 MediRemind AI — ${appState.activeMember}'s Medicine Schedule`, ""];
+  SLOTS.forEach((s) => {
+    const list = meds.filter((m) => m.slot === s.key).map((m) => m.name);
+    if (list.length > 0) {
+      lines.push(`${s.key} (${profile.alarms[s.key] || s.defaultTime}): ${list.join(", ")}`);
+    }
+  });
+
+  const reportText = lines.join("\n");
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(reportText);
+    showToast("Medicine schedule copied to clipboard!");
   }
-  document.getElementById("keyModal").classList.remove("show");
+};
+
+document.getElementById("resetTodayDosesBtn").onclick = async () => {
+  const profile = getActiveProfile();
+  profile.medicines = (profile.medicines || []).map((m) => ({ ...m, takenDate: "" }));
+  renderAllUI();
+  await saveAppState();
+  document.getElementById("settingsModal").classList.remove("show");
+  showToast("All doses reset for today!");
 };
