@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MediRemind AI — Smart Medicine Reminder</title>
+  <title>MediRemind AI Pro Max — Smart Medicine Reminder & Care</title>
   <link rel="icon" type="image/png" href="logo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #06100e;
-      --card: #0d1d1a;
-      --card-2: #142925;
-      --border: rgba(255, 255, 255, 0.1);
+      --bg: #050d0b;
+      --surface: #0b1916;
+      --surface-2: #122622;
+      --border: rgba(255, 255, 255, 0.09);
       --primary: #10b981;
+      --primary-dark: #059669;
       --cyan: #22d3ee;
       --amber: #fbbf24;
       --rose: #fb7185;
@@ -25,36 +26,36 @@
     body {
       background: var(--bg);
       background-image:
-        radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.18), transparent 45%),
-        radial-gradient(circle at 85% 10%, rgba(34, 211, 238, 0.12), transparent 45%);
+        radial-gradient(circle at 12% 0%, rgba(16, 185, 129, 0.17), transparent 45%),
+        radial-gradient(circle at 88% 8%, rgba(34, 211, 238, 0.12), transparent 45%);
       color: var(--text);
-      padding: 14px 14px 48px;
+      padding: 12px 14px 48px;
       min-height: 100vh;
     }
-    .container { max-width: 720px; margin: 0 auto; }
+    .container { max-width: 780px; margin: 0 auto; }
     .hidden { display: none !important; }
 
-    /* ================= LOGIN / SIGNUP SCREEN ================= */
+    /* ================= LOGIN / SIGN UP SCREEN ================= */
     .auth-wrapper {
-      min-height: 90vh;
+      min-height: 92vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
     }
     .auth-card {
-      background: var(--card);
+      background: var(--surface);
       border: 1px solid rgba(16, 185, 129, 0.35);
       border-top: 3px solid var(--primary);
       border-radius: 20px;
       padding: 28px 24px;
       width: 100%;
       max-width: 410px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.85);
     }
     .google-btn {
       width: 100%; padding: 13px; border-radius: 12px; border: none;
-      background: #ffffff; color: #06100e; font-size: 14px; font-weight: 700;
+      background: #ffffff; color: #050d0b; font-size: 14px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; gap: 10px;
       cursor: pointer;
     }
@@ -67,74 +68,124 @@
     /* ================= TOP HEADER ================= */
     .topbar {
       display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-      background: var(--card); border: 1px solid rgba(16, 185, 129, 0.35);
-      border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; gap: 10px;
+      background: rgba(11, 25, 22, 0.95); backdrop-filter: blur(12px);
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; gap: 10px;
+      position: sticky; top: 8px; z-index: 40;
     }
-    .brand-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+    .brand-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 6px; }
+    .pro-badge {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+      background: linear-gradient(135deg, #10b981, #22d3ee); color: #04100d;
+      padding: 2px 6px; border-radius: 5px;
+    }
     .brand-sub { font-size: 11px; color: var(--cyan); margin-top: 2px; font-weight: 600; }
     .top-btns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
     /* ================= BUTTONS & INPUTS ================= */
     .btn {
       border: none; border-radius: 11px; font-size: 12px; font-weight: 700;
-      padding: 10px 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      transition: transform 0.12s ease;
+      padding: 9px 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: transform 0.12s ease, opacity 0.2s;
     }
     .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-primary { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-    .btn-cyan { background: rgba(34, 211, 238, 0.16); border: 1px solid rgba(34, 211, 238, 0.45); color: var(--cyan); }
+    .btn-cyan { background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.42); color: var(--cyan); }
     .btn-ai {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(34, 211, 238, 0.25));
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(34, 211, 238, 0.24));
       border: 1px solid rgba(34, 211, 238, 0.55); color: #a7f3d0;
     }
-    .btn-ghost { background: var(--card-2); border: 1px solid var(--border); color: var(--text); }
-    .btn-danger { background: rgba(251, 113, 133, 0.16); border: 1px solid rgba(251, 113, 133, 0.35); color: var(--rose); }
+    .btn-amber { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.42); color: var(--amber); }
+    .btn-ghost { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+    .btn-danger { background: rgba(251, 113, 133, 0.15); border: 1px solid rgba(251, 113, 133, 0.35); color: var(--rose); }
 
     input, select {
       width: 100%; padding: 11px 12px; border-radius: 10px;
-      border: 1px solid var(--border); background: var(--card-2);
+      border: 1px solid var(--border); background: var(--surface-2);
       color: var(--text); font-size: 13px; outline: none;
     }
     input:focus, select:focus { border-color: var(--primary); }
 
+    /* ================= MEMBER PILLS BAR ================= */
+    .member-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .member-pills { display: flex; align-items: center; gap: 6px; overflow-x: auto; flex: 1; scrollbar-width: none; }
+    .member-pills::-webkit-scrollbar { display: none; }
+    .m-pill {
+      padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 700;
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .m-pill.active {
+      background: rgba(16, 185, 129, 0.22); border-color: var(--primary); color: #fff;
+    }
+    .m-pill .del-m { color: var(--rose); font-size: 11px; margin-left: 2px; }
+
+    /* ================= LIGHT COST STRIP ================= */
+    .cost-strip {
+      display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center;
+      background: linear-gradient(135deg, #0d211d, #0a1715);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+    }
+    @media (max-width: 560px) {
+      .cost-strip { grid-template-columns: 1fr 1fr; }
+      .cost-strip button { grid-column: span 2; width: 100%; }
+    }
+    .cost-box span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); font-weight: 700; }
+    .cost-box strong { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; color: var(--primary); }
+
     /* ================= CARDS ================= */
     .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 16px; margin-bottom: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 15px; margin-bottom: 14px;
     }
     .card-head {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; gap: 8px;
+      margin-bottom: 11px; gap: 8px;
     }
     .card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; }
 
-    /* Big Scan & Upload Grid */
-    .scan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .big-scan-btn {
-      padding: 15px 10px; border-radius: 14px; font-size: 13px; font-weight: 800;
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    /* Scan, Upload & Mic Grid */
+    .scan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 11px; }
+    .big-action-btn {
+      padding: 13px 8px; border-radius: 13px; font-size: 12px; font-weight: 800;
+      display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center;
     }
-    .big-scan-btn span.emoji { font-size: 26px; }
+    .big-action-btn span.emoji { font-size: 24px; }
+    .mic-recording {
+      background: rgba(251, 113, 133, 0.24) !important;
+      border: 1px solid var(--rose) !important;
+      color: #fecdd3 !important;
+      animation: pulseMic 1.1s infinite;
+    }
+    @keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
 
     .ai-bar { display: flex; gap: 8px; margin-bottom: 10px; }
-    .add-row { display: grid; grid-template-columns: 1.5fr 1fr auto; gap: 8px; }
-    @media (max-width: 540px) {
-      .add-row { grid-template-columns: 1fr; }
+    .add-row { display: grid; grid-template-columns: 1.4fr 0.7fr 0.9fr auto; gap: 8px; }
+    @media (max-width: 600px) {
+      .add-row { grid-template-columns: 1fr 1fr; }
+      .add-row input:first-child { grid-column: span 2; }
+      .add-row button { grid-column: span 2; }
     }
 
     .status-banner {
       margin-top: 10px; padding: 10px 12px; border-radius: 10px;
-      background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.38);
       font-size: 12px; color: #a7f3d0; line-height: 1.45;
     }
 
-    /* 4 Dose Time Cards */
+    /* ================= 4 DOSE TIME CARDS ================= */
     .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 600px) {
+    @media (max-width: 620px) {
       .slots-grid { grid-template-columns: 1fr; }
     }
     .slot-card {
-      background: var(--card); border: 1px solid rgba(16, 185, 129, 0.3);
+      background: var(--surface); border: 1px solid rgba(16, 185, 129, 0.28);
       border-radius: 16px; padding: 14px;
     }
     .slot-top {
@@ -149,63 +200,100 @@
 
     .med-item {
       display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      background: var(--card-2); border: 1px solid var(--border);
-      padding: 9px 10px; border-radius: 10px; margin-bottom: 8px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      padding: 9px 10px; border-radius: 11px; margin-bottom: 8px;
     }
     .med-item.taken {
       opacity: 0.65; border-color: rgba(16, 185, 129, 0.45);
       background: rgba(16, 185, 129, 0.1);
     }
     .med-item.taken .med-title { text-decoration: line-through; color: var(--primary); }
-    .med-title { font-size: 13px; font-weight: 600; }
-    .med-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .med-title { font-size: 13px; font-weight: 700; }
+    .med-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+    .price-pill {
+      font-size: 10px; font-weight: 800; color: var(--amber);
+      background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.3);
+      padding: 1px 6px; border-radius: 5px;
+    }
+    .buy-mini-link {
+      font-size: 10px; font-weight: 700; color: var(--cyan); text-decoration: none;
+      background: rgba(34, 211, 238, 0.12); padding: 1px 6px; border-radius: 5px;
+    }
 
-    /* ================= AI HEALTH CHAT DRAWER ================= */
+    /* ================= PRO MAX AI CHAT DRAWER (CHATGPT / GEMINI STYLE) ================= */
     .drawer-backdrop {
-      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
-      z-index: 9850;
+      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(4px); z-index: 9850;
     }
     .drawer-backdrop.show { display: block; }
     .ai-drawer {
       position: fixed; top: 0; right: 0; bottom: 0;
-      width: 100%; max-width: 400px;
-      background: #091513; border-left: 1px solid rgba(34, 211, 238, 0.35);
+      width: 100%; max-width: 440px;
+      background: #071210; border-left: 1px solid rgba(34, 211, 238, 0.35);
       z-index: 9860; display: flex; flex-direction: column;
-      transform: translateX(100%); transition: transform 0.25s ease;
+      transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: -18px 0 45px rgba(0, 0, 0, 0.88);
     }
     .ai-drawer.open { transform: translateX(0); }
     .ai-drawer-head {
-      padding: 14px; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--card);
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; gap: 6px;
+      background: var(--surface);
     }
+    .chat-history-drawer {
+      background: #0c1b18; border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+      max-height: 230px; overflow-y: auto; padding: 10px;
+    }
+    .hist-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 8px 10px; border-radius: 9px; margin-bottom: 5px;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid transparent;
+      cursor: pointer; font-size: 12px;
+    }
+    .hist-row.active {
+      background: rgba(16, 185, 129, 0.18); border-color: rgba(16, 185, 129, 0.42); color: var(--primary);
+    }
+    .hist-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .hist-btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .hist-btns button {
+      background: rgba(255, 255, 255, 0.07); border: none; color: var(--muted);
+      width: 24px; height: 24px; border-radius: 6px; font-size: 11px; cursor: pointer;
+    }
+
     .ai-messages {
       flex: 1; overflow-y: auto; padding: 14px;
       display: flex; flex-direction: column; gap: 10px;
     }
     .bubble {
-      max-width: 85%; padding: 10px 13px; border-radius: 14px;
-      font-size: 12.5px; line-height: 1.5; white-space: pre-wrap;
+      max-width: 88%; padding: 11px 13px; border-radius: 14px;
+      font-size: 12.5px; line-height: 1.55; word-wrap: break-word;
     }
     .bubble.ai {
-      align-self: flex-start; background: var(--card-2);
-      border: 1px solid rgba(16, 185, 129, 0.3); color: var(--text);
+      align-self: flex-start; background: var(--surface-2);
+      border: 1px solid rgba(16, 185, 129, 0.28); color: var(--text);
+      border-bottom-left-radius: 3px;
+    }
+    .bubble.ai a {
+      color: var(--cyan); font-weight: 700; text-decoration: underline;
     }
     .bubble.user {
-      align-self: flex-end; background: var(--primary); color: #fff; font-weight: 600;
+      align-self: flex-end; background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff; font-weight: 600; border-bottom-right-radius: 3px;
     }
+
     .ai-chips {
       padding: 8px 12px; display: flex; gap: 6px; overflow-x: auto;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--border); scrollbar-width: none;
     }
+    .ai-chips::-webkit-scrollbar { display: none; }
     .chip-btn {
-      background: var(--card-2); border: 1px solid rgba(34, 211, 238, 0.35);
+      background: var(--surface-2); border: 1px solid rgba(34, 211, 238, 0.35);
       color: var(--cyan); padding: 6px 10px; border-radius: 8px;
       font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer;
     }
     .ai-foot {
       padding: 10px 12px 14px; border-top: 1px solid var(--border);
-      display: flex; gap: 8px; background: var(--card);
+      display: flex; gap: 8px; background: var(--surface);
     }
 
     /* Modals */
@@ -215,14 +303,15 @@
     }
     .modal-overlay.show { display: flex; }
     .modal-box {
-      background: var(--card); border: 1px solid var(--primary);
-      border-radius: 18px; padding: 22px; width: 100%; max-width: 390px;
+      background: var(--surface); border: 1px solid var(--primary);
+      border-radius: 18px; padding: 22px; width: 100%; max-width: 400px;
     }
 
     #toast {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: var(--primary); color: #fff; padding: 10px 18px; border-radius: 10px;
       font-size: 12px; font-weight: 700; display: none; z-index: 10000;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65);
     }
   </style>
 </head>
@@ -234,7 +323,7 @@
       <div style="text-align:center; margin-bottom:18px;">
         <div style="font-size:44px; margin-bottom:6px;">💊</div>
         <h1 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:24px; font-weight:800;">MediRemind AI</h1>
-        <p style="font-size:12px; color:var(--muted); margin-top:4px;">Smart Medicine Reminder & AI Prescription Assistant</p>
+        <p style="font-size:12px; color:var(--muted); margin-top:4px;">Voice Medicine Reminder, Prescription Vision & Pharmacy Finder</p>
       </div>
 
       <button type="button" id="googleLoginBtn" class="google-btn">
@@ -263,54 +352,79 @@
     </div>
   </div>
 
-  <!-- ==================== 2. MAIN DASHBOARD ==================== -->
+  <!-- ==================== 2. MAIN PRO MAX DASHBOARD ==================== -->
   <div id="dashboardContainer" class="container hidden">
 
     <!-- Top Header -->
     <div class="topbar">
       <div>
-        <div class="brand-title">💊 MediRemind AI</div>
-        <div class="brand-sub" id="userSubtitle">Welcome • Next Dose: 08:30</div>
+        <div class="brand-title">💊 MediRemind AI <span class="pro-badge">Pro Max</span></div>
+        <div class="brand-sub" id="userSubtitle">Active • Next Dose: 08:30</div>
       </div>
       <div class="top-btns">
         <button type="button" id="openAiChatBtn" class="btn btn-ai">✨ AI Health Chat</button>
-        <button type="button" id="enableNotifBtn" class="btn btn-cyan">🔔 Enable Alert</button>
+        <button type="button" id="enableNotifBtn" class="btn btn-cyan">🔔 Alerts</button>
         <button type="button" id="testAlarmBtn" class="btn btn-primary">🔊 Test Alarm</button>
-        <button type="button" id="openKeyModalBtn" class="btn btn-ghost" title="Gemini API Key">⚙️</button>
+        <button type="button" id="openKeyModalBtn" class="btn btn-ghost" title="API Key">⚙️</button>
         <button type="button" id="logoutBtn" class="btn btn-danger">Logout</button>
       </div>
     </div>
 
-    <!-- Step 1: AI Prescription Scanner & Smart Entry -->
-    <div class="card" style="border-color: rgba(34, 211, 238, 0.38);">
+    <!-- Family Member Switcher Bar (Me, Baba, Dadu, Maa) -->
+    <div class="member-bar">
+      <div class="member-pills" id="memberPillsWrap"></div>
+      <button type="button" id="addMemberBtn" class="btn btn-cyan" style="padding:7px 11px; font-size:11px; flex-shrink:0;">+ Add Member</button>
+    </div>
+
+    <!-- Light Medicine Cost & AI Live Web Price Bar -->
+    <div class="cost-strip">
+      <div class="cost-box">
+        <span id="dailyCostLabel">Daily Med Cost</span>
+        <strong id="dailyCostVal">₹0</strong>
+      </div>
+      <div class="cost-box">
+        <span>Est. Monthly Cost</span>
+        <strong id="monthlyCostVal" style="color:var(--cyan);">₹0</strong>
+      </div>
+      <button type="button" id="updateWebPricesBtn" class="btn btn-amber">🌐 Update Web Prices</button>
+    </div>
+
+    <!-- Step 1: Camera Scan, Upload Photo, Elderly Voice Mic & Quick Add -->
+    <div class="card" style="border-color: rgba(34, 211, 238, 0.36);">
       <div class="card-head">
-        <span class="card-title" style="color:var(--cyan);">1. Scan Prescription or Add Medicine</span>
+        <span class="card-title" style="color:var(--cyan);">1. Scan, Speak or Add Medicine</span>
+        <span id="activeMemberBadge" style="font-size:11px; color:var(--primary); font-weight:700;">For: Me</span>
       </div>
 
       <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
       <input type="file" id="galleryInput" accept="image/*" class="hidden" />
 
-      <!-- Camera & Upload Buttons -->
+      <!-- 3 Big Action Buttons: Camera, Gallery, Elderly Voice Mic -->
       <div class="scan-grid">
-        <button type="button" id="scanCameraBtn" class="btn btn-primary big-scan-btn">
+        <button type="button" id="scanCameraBtn" class="btn btn-primary big-action-btn">
           <span class="emoji">📷</span>
-          <span>Scan with Camera</span>
+          <span>Scan Camera</span>
         </button>
-        <button type="button" id="uploadGalleryBtn" class="btn btn-cyan big-scan-btn">
+        <button type="button" id="uploadGalleryBtn" class="btn btn-cyan big-action-btn">
           <span class="emoji">🖼️</span>
-          <span>Upload Prescription</span>
+          <span>Upload Photo</span>
+        </button>
+        <button type="button" id="voiceMicBtn" class="btn btn-amber big-action-btn">
+          <span class="emoji">🎤</span>
+          <span id="voiceMicLabel">Speak Medicine</span>
         </button>
       </div>
 
-      <!-- AI Natural Language Input -->
+      <!-- AI Natural Language Bar -->
       <div class="ai-bar">
-        <input type="text" id="aiTextEntryInput" placeholder='AI Smart Add: e.g. "Paracetamol 500mg morning and night"' />
+        <input type="text" id="aiTextEntryInput" placeholder='Speak or type: "Paracetamol 500mg morning and night"' />
         <button type="button" id="aiTextAddBtn" class="btn btn-ai" style="flex-shrink:0;">✨ AI Add</button>
       </div>
 
-      <!-- Manual Quick Add -->
+      <!-- Manual Quick Add with Optional Price -->
       <div class="add-row">
-        <input type="text" id="medNameInput" placeholder="Or type medicine name manually..." />
+        <input type="text" id="medNameInput" placeholder="Medicine name (e.g. Dolo 650)" />
+        <input type="number" id="medPriceInput" placeholder="Price ₹ (optional)" min="0" />
         <select id="medSlotSelect">
           <option value="Morning">🌅 Morning</option>
           <option value="Noon">☀️ Noon</option>
@@ -326,36 +440,50 @@
     <!-- Step 2: 4 Dose Schedules & Alarms -->
     <div class="card-head" style="padding: 0 4px;">
       <span class="card-title">2. Daily Medicine Schedule & Alarms</span>
-      <span style="font-size:11px; color:var(--muted);">Tap time to edit alarm</span>
+      <span style="font-size:11px; color:var(--muted);">Tap time to change alarm</span>
     </div>
 
     <div class="slots-grid" id="scheduleGrid"></div>
 
   </div>
 
-  <!-- ==================== 3. AI HEALTH CHAT SIDE DRAWER ==================== -->
+  <!-- ==================== 3. PRO MAX AI HEALTH CHAT DRAWER ==================== -->
   <div id="aiBackdrop" class="drawer-backdrop"></div>
   <aside id="aiDrawer" class="ai-drawer">
     <div class="ai-drawer-head">
-      <div>
-        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:800; color:var(--cyan);">✨ MediRemind AI Assistant</div>
-        <div style="font-size:10px; color:var(--muted);">Synced with your live medicine schedule</div>
+      <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+        <button type="button" id="toggleChatHistBtn" class="btn btn-ghost" style="padding:5px 9px;" title="Chat History">☰</button>
+        <div style="min-width:0;">
+          <div id="activeChatTitle" style="font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:800; color:var(--cyan); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">New Health Chat</div>
+          <div style="font-size:10px; color:var(--muted);">Pharmacy Finder & Online Store Links</div>
+        </div>
       </div>
-      <button type="button" id="closeAiChatBtn" class="btn btn-ghost" style="padding:5px 10px;">✕</button>
+      <div style="display:flex; gap:4px; flex-shrink:0;">
+        <button type="button" id="renameChatBtn" class="btn btn-ghost" style="padding:5px 8px;" title="Rename Chat">✏️</button>
+        <button type="button" id="deleteChatBtn" class="btn btn-danger" style="padding:5px 8px;" title="Delete Chat">🗑️</button>
+        <button type="button" id="newChatBtn" class="btn btn-cyan" style="padding:5px 9px; font-size:11px;">+ New</button>
+        <button type="button" id="closeAiChatBtn" class="btn btn-ghost" style="padding:5px 9px;">✕</button>
+      </div>
     </div>
 
-    <div id="aiChatMessages" class="ai-messages">
-      <div class="bubble ai">💊 Hi! I am MediRemind AI. Ask me about today's Morning, Noon, Afternoon, or Night medicines, dosage timing, or side effects in English, Bengali, or Hindi!</div>
+    <!-- Saved Chat History Panel -->
+    <div id="chatHistoryPanel" class="chat-history-drawer hidden">
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); font-weight:700; margin-bottom:6px;">Saved Conversations</div>
+      <div id="chatHistoryList"></div>
     </div>
 
+    <!-- Chat Messages -->
+    <div id="aiChatMessages" class="ai-messages"></div>
+
+    <!-- Quick Action Chips -->
     <div class="ai-chips">
-      <button type="button" class="chip-btn" data-q="What medicines are scheduled for me today?">💊 Today's Doses</button>
-      <button type="button" class="chip-btn" data-q="Which medicines have I not taken yet today?">⏰ Pending Meds</button>
-      <button type="button" class="chip-btn" data-q="Check my medicine list and give safety tips.">🩺 Safety Check</button>
+      <button type="button" class="chip-btn" id="findStoreChip">📍 Nearest Medical Store</button>
+      <button type="button" class="chip-btn" data-q="Give me direct online buy links on Apollo Pharmacy, Tata 1mg, and Flipkart Health for all my scheduled medicines.">🛒 Buy Meds Online</button>
+      <button type="button" class="chip-btn" data-q="What medicines are scheduled today and what is the total cost?">💊 Today's Schedule</button>
     </div>
 
     <form id="aiChatForm" class="ai-foot">
-      <input type="text" id="aiChatInput" placeholder="Ask MediRemind AI..." required style="flex:1;" />
+      <input type="text" id="aiChatInput" placeholder="Ask about medicines, stores, or prices..." required style="flex:1;" />
       <button type="submit" class="btn btn-primary">Send</button>
     </form>
   </aside>
@@ -366,622 +494,38 @@
       <div style="font-size:46px; margin-bottom:8px;">💊🔔</div>
       <div id="alarmModalSlot" style="font-size:11px; font-weight:800; color:var(--cyan); letter-spacing:1px;">MORNING DOSE</div>
       <h2 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:20px; margin:6px 0 12px;">Time to Take Medicine!</h2>
-      <div id="alarmModalMeds" style="background:var(--card-2); padding:12px; border-radius:12px; font-size:14px; font-weight:700; color:#a7f3d0; margin-bottom:16px;"></div>
+      <div id="alarmModalMeds" style="background:var(--surface-2); padding:12px; border-radius:12px; font-size:14px; font-weight:700; color:#a7f3d0; margin-bottom:16px;"></div>
       <button type="button" id="alarmDoneBtn" class="btn btn-primary" style="width:100%; padding:13px; font-size:14px;">✅ Taken & Stop Alarm</button>
     </div>
   </div>
 
-  <!-- ==================== 5. GEMINI API KEY MODAL ==================== -->
+  <!-- ==================== 5. ADD MEMBER / DIALOG MODAL ==================== -->
+  <div id="promptModal" class="modal-overlay" style="z-index:9950;">
+    <div class="modal-box">
+      <div class="card-head">
+        <span class="card-title" id="promptModalTitle" style="color:var(--cyan);">Add Family Member</span>
+        <button type="button" id="promptCancelBtn" class="btn btn-ghost" style="padding:4px 9px;">✕</button>
+      </div>
+      <p id="promptModalDesc" style="font-size:12px; color:var(--muted); margin-bottom:10px;">Enter member name (e.g. Baba, Dadu, Maa):</p>
+      <input type="text" id="promptModalInput" placeholder="Enter name..." style="margin-bottom:12px;" />
+      <button type="button" id="promptConfirmBtn" class="btn btn-primary" style="width:100%;">Confirm</button>
+    </div>
+  </div>
+
+  <!-- ==================== 6. GEMINI API KEY MODAL ==================== -->
   <div id="keyModal" class="modal-overlay">
     <div class="modal-box">
       <div class="card-head">
         <span class="card-title" style="color:var(--cyan);">⚙️ Gemini AI API Key</span>
         <button type="button" id="closeKeyModalBtn" class="btn btn-ghost" style="padding:4px 9px;">✕</button>
       </div>
-      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Paste your AIzaSy... key from Google AI Studio so prescription scan & AI Chat work:</p>
-      <input type="text" id="geminiKeyInput" placeholder="Paste AIzaSy... key here" style="margin-bottom:12px;" />
+      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Optional: Paste a custom Gemini API key below if you want to override the built-in key:</p>
+      <input type="text" id="geminiKeyInput" placeholder="Paste custom API key..." style="margin-bottom:12px;" />
       <button type="button" id="saveGeminiKeyBtn" class="btn btn-primary" style="width:100%;">Save API Key</button>
     </div>
   </div>
 
   <div id="toast"></div>
-
-  <script type="module">
-    import { auth, db, runGeminiAI } from "./firebase-config.js?v=6";
-    import {
-      GoogleAuthProvider,
-      signInWithPopup,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      updateProfile,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      doc,
-      setDoc,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const SLOTS = [
-      { key: "Morning", icon: "🌅", defaultTime: "08:30" },
-      { key: "Noon", icon: "☀️", defaultTime: "13:30" },
-      { key: "Afternoon", icon: "🌤️", defaultTime: "17:30" },
-      { key: "Night", icon: "🌙", defaultTime: "21:30" }
-    ];
-
-    let currentUser = null;
-    let isSignUpMode = true;
-    let unsubFirestore = null;
-    let triggeredToday = new Set();
-
-    let scheduleData = {
-      alarms: { Morning: "08:30", Noon: "13:30", Afternoon: "17:30", Night: "21:30" },
-      medicines: []
-    };
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    }
-
-    function showToast(msg, isError = false) {
-      const t = document.getElementById("toast");
-      t.innerText = msg;
-      t.style.background = isError ? "#fb7185" : "#10b981";
-      t.style.display = "block";
-      clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => { t.style.display = "none"; }, 2600);
-    }
-
-    function escapeHtml(str) {
-      return String(str || "").replace(/[&<>"']/g, (m) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[m]));
-    }
-
-    function getTodayDateStr() {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    }
-
-    // ==================== AUTHENTICATION (LOGIN & SIGN UP) ====================
-    document.getElementById("toggleAuthModeBtn").onclick = () => {
-      isSignUpMode = !isSignUpMode;
-      document.getElementById("authNameInput").classList.toggle("hidden", !isSignUpMode);
-      document.getElementById("authSubmitBtn").innerText = isSignUpMode ? "Create Account →" : "Sign In →";
-      document.getElementById("toggleAuthModeBtn").innerText = isSignUpMode
-        ? "Already have an account? Switch to Sign In"
-        : "New user? Switch to Create Account";
-    };
-
-    document.getElementById("googleLoginBtn").onclick = async () => {
-      const errEl = document.getElementById("authErrorMsg");
-      errEl.classList.add("hidden");
-      try {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-      } catch (err) {
-        errEl.innerText = err.message || "Google Sign-In failed.";
-        errEl.classList.remove("hidden");
-      }
-    };
-
-    document.getElementById("emailAuthForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("authNameInput").value.trim();
-      const email = document.getElementById("authEmailInput").value.trim();
-      const pass = document.getElementById("authPassInput").value;
-      const errEl = document.getElementById("authErrorMsg");
-      errEl.classList.add("hidden");
-
-      try {
-        if (isSignUpMode) {
-          const cred = await createUserWithEmailAndPassword(auth, email, pass);
-          if (name) await updateProfile(cred.user, { displayName: name });
-          showToast("Account created!");
-        } else {
-          await signInWithEmailAndPassword(auth, email, pass);
-          showToast("Signed in!");
-        }
-      } catch (err) {
-        if (err.code === "auth/email-already-in-use") {
-          try {
-            await signInWithEmailAndPassword(auth, email, pass);
-            return;
-          } catch (e2) {
-            errEl.innerText = e2.message;
-          }
-        } else {
-          errEl.innerText = err.message;
-        }
-        errEl.classList.remove("hidden");
-      }
-    };
-
-    document.getElementById("logoutBtn").onclick = async () => {
-      if (unsubFirestore) unsubFirestore();
-      await signOut(auth);
-      showToast("Logged out");
-    };
-
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      if (!user) {
-        document.getElementById("authScreen").classList.remove("hidden");
-        document.getElementById("dashboardContainer").classList.add("hidden");
-        return;
-      }
-
-      document.getElementById("authScreen").classList.add("hidden");
-      document.getElementById("dashboardContainer").classList.remove("hidden");
-
-      const displayName = user.displayName || user.email.split("@")[0];
-      document.getElementById("userSubtitle").dataset.userName = displayName;
-
-      // Load local cache instantly
-      try {
-        const cached = JSON.parse(localStorage.getItem(`mediremind_data_${user.uid}`) || "null");
-        if (cached && cached.alarms) {
-          scheduleData = {
-            alarms: { ...scheduleData.alarms, ...cached.alarms },
-            medicines: Array.isArray(cached.medicines) ? cached.medicines : []
-          };
-        }
-      } catch (e) {}
-
-      renderScheduleGrid();
-      updateNotifBtn();
-
-      // Subscribe to Firestore cloud sync
-      if (unsubFirestore) unsubFirestore();
-      unsubFirestore = onSnapshot(doc(db, "users", user.uid, "medData", "main"), (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          scheduleData = {
-            alarms: { ...scheduleData.alarms, ...(d.alarms || {}) },
-            medicines: Array.isArray(d.medicines) ? d.medicines : []
-          };
-          localStorage.setItem(`mediremind_data_${user.uid}`, JSON.stringify(scheduleData));
-          renderScheduleGrid();
-        } else {
-          saveSchedule();
-        }
-      });
-    });
-
-    async function saveSchedule() {
-      if (!currentUser) return;
-      localStorage.setItem(`mediremind_data_${currentUser.uid}`, JSON.stringify(scheduleData));
-      try {
-        await setDoc(doc(db, "users", currentUser.uid, "medData", "main"), scheduleData, { merge: true });
-      } catch (e) {}
-    }
-
-    // ==================== RENDER 4 DOSE CARDS ====================
-    function renderScheduleGrid() {
-      const grid = document.getElementById("scheduleGrid");
-      grid.innerHTML = "";
-      const todayStr = getTodayDateStr();
-
-      SLOTS.forEach((slot) => {
-        const alarmVal = scheduleData.alarms[slot.key] || slot.defaultTime;
-        const slotMeds = scheduleData.medicines.filter((m) => m.slot === slot.key);
-
-        const card = document.createElement("div");
-        card.className = "slot-card";
-
-        const medsHtml = slotMeds.length === 0
-          ? `<p style="font-size:12px; color:var(--muted); padding:8px 2px;">No medicines scheduled.</p>`
-          : slotMeds.map((med) => {
-              const isTaken = med.takenDate === todayStr;
-              return `
-                <div class="med-item ${isTaken ? "taken" : ""}">
-                  <div style="min-width:0; flex:1;">
-                    <div class="med-title">${escapeHtml(med.name)}</div>
-                    <div class="med-sub">${isTaken ? "✅ Taken today" : `⏰ Alert at ${alarmVal}`}</div>
-                  </div>
-                  <div style="display:flex; gap:5px; flex-shrink:0;">
-                    <button type="button" class="btn ${isTaken ? "btn-ghost" : "btn-primary"}" style="padding:6px 9px; font-size:11px;" data-toggle-id="${med.id}">
-                      ${isTaken ? "Undo" : "✓ Taken"}
-                    </button>
-                    <button type="button" class="btn btn-danger" style="padding:6px 8px; font-size:11px;" data-del-id="${med.id}">✕</button>
-                  </div>
-                </div>
-              `;
-            }).join("");
-
-        card.innerHTML = `
-          <div class="slot-top">
-            <span class="slot-name">${slot.icon} ${slot.key}</span>
-            <input type="time" class="time-box" data-slot-time="${slot.key}" value="${escapeHtml(alarmVal)}" />
-          </div>
-          <div>${medsHtml}</div>
-        `;
-
-        card.querySelector("[data-slot-time]").onchange = async (e) => {
-          if (!e.target.value) return;
-          scheduleData.alarms[slot.key] = e.target.value;
-          renderScheduleGrid();
-          await saveSchedule();
-          showToast(`${slot.key} alarm set to ${e.target.value}`);
-        };
-
-        card.querySelectorAll("[data-toggle-id]").forEach((btn) => {
-          btn.onclick = async () => {
-            const id = btn.dataset.toggleId;
-            scheduleData.medicines = scheduleData.medicines.map((m) =>
-              m.id === id ? { ...m, takenDate: m.takenDate === todayStr ? "" : todayStr } : m
-            );
-            renderScheduleGrid();
-            await saveSchedule();
-          };
-        });
-
-        card.querySelectorAll("[data-del-id]").forEach((btn) => {
-          btn.onclick = async () => {
-            const id = btn.dataset.delId;
-            scheduleData.medicines = scheduleData.medicines.filter((m) => m.id !== id);
-            renderScheduleGrid();
-            await saveSchedule();
-            showToast("Medicine removed");
-          };
-        });
-
-        grid.appendChild(card);
-      });
-
-      updateNextAlarmBanner();
-    }
-
-    // Manual Add
-    document.getElementById("quickAddBtn").onclick = async () => {
-      const nameInp = document.getElementById("medNameInput");
-      const slotSel = document.getElementById("medSlotSelect");
-      const name = nameInp.value.trim();
-      const slot = slotSel.value;
-      if (!name) return showToast("Enter a medicine name", true);
-
-      scheduleData.medicines.push({
-        id: `med_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        name,
-        slot,
-        takenDate: ""
-      });
-      nameInp.value = "";
-      renderScheduleGrid();
-      await saveSchedule();
-      showToast(`Added ${name} to ${slot}`);
-    };
-
-    // ==================== AI SMART TEXT & CAMERA/PHOTO PRESCRIPTION SCAN ====================
-    function addScannedMedicinesList(list) {
-      let added = 0;
-      const labels = [];
-      list.forEach((item) => {
-        const mName = String(item.name || "").trim();
-        const slot = SLOTS.some((s) => s.key === item.slot) ? item.slot : "Morning";
-        if (mName && !scheduleData.medicines.some((m) => m.name.toLowerCase() === mName.toLowerCase() && m.slot === slot)) {
-          scheduleData.medicines.push({
-            id: `med_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            name: mName,
-            slot,
-            takenDate: ""
-          });
-          labels.push(`${mName} (${slot})`);
-          added++;
-        }
-      });
-      return { added, labels };
-    }
-
-    document.getElementById("aiTextAddBtn").onclick = async () => {
-      const inp = document.getElementById("aiTextEntryInput");
-      const statusEl = document.getElementById("aiScanStatus");
-      const text = inp.value.trim();
-      if (!text) return;
-
-      statusEl.innerText = "✨ AI is scheduling your medicines...";
-      statusEl.classList.remove("hidden");
-
-      const prompt = `Extract medicines and dose time slots from: "${text}".
-Allowed slots: ["Morning", "Noon", "Afternoon", "Night"].
-If a medicine is taken multiple times (e.g. morning and night, or 1-0-1), create separate items for each slot.
-Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Morning"}]}`;
-
-      const { text: reply, error } = await runGeminiAI({ parts: [{ text: prompt }], jsonMode: true });
-      if (!reply) {
-        statusEl.innerText = `⚠️ ${error}`;
-        return;
-      }
-
-      try {
-        const parsed = JSON.parse(reply.match(/\{[\s\S]*\}/)[0]);
-        const { added, labels } = addScannedMedicinesList(parsed.medicines || []);
-        inp.value = "";
-        renderScheduleGrid();
-        await saveSchedule();
-        statusEl.innerText = added > 0
-          ? `✅ Scheduled ${added} dose(s): ${labels.join(", ")}`
-          : "✅ Already in your schedule.";
-      } catch (e) {
-        statusEl.innerText = "⚠️ Could not parse medicines. Try again.";
-      }
-    };
-
-    document.getElementById("scanCameraBtn").onclick = () => document.getElementById("cameraInput").click();
-    document.getElementById("uploadGalleryBtn").onclick = () => document.getElementById("galleryInput").click();
-
-    function compressImage(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            let { width, height } = img;
-            if (width > 960 || height > 960) {
-              const r = 960 / Math.max(width, height);
-              width = Math.round(width * r);
-              height = Math.round(height * r);
-            }
-            const c = document.createElement("canvas");
-            c.width = width;
-            c.height = height;
-            c.getContext("2d").drawImage(img, 0, 0, width, height);
-            const url = c.toDataURL("image/jpeg", 0.84);
-            resolve({ base64: url.split(",")[1], mime: "image/jpeg" });
-          };
-          img.onerror = reject;
-          img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function handlePrescriptionImage(file) {
-      if (!file) return;
-      const statusEl = document.getElementById("aiScanStatus");
-      statusEl.innerText = "📷 Scanning prescription with MediRemind AI...";
-      statusEl.classList.remove("hidden");
-
-      try {
-        const imgData = await compressImage(file);
-        const prompt = `Read this doctor prescription, medicine strip, or pharmacy bill.
-Extract each medicine name (with dosage if visible, e.g. "Paracetamol 500mg") and assign it to time slots from ["Morning", "Noon", "Afternoon", "Night"].
-If frequency is 1-0-1, add one entry for "Morning" and one for "Night". If 1-1-1, add "Morning", "Noon", and "Night". Default to "Morning" if unspecified.
-Return ONLY valid JSON: {"medicines": [{"name": "Medicine Name", "slot": "Morning"}]}`;
-
-        const { text: reply, error } = await runGeminiAI({
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: imgData.mime, data: imgData.base64 } }
-          ],
-          jsonMode: true
-        });
-
-        if (!reply) {
-          statusEl.innerText = `⚠️ ${error}`;
-          return;
-        }
-
-        const parsed = JSON.parse(reply.match(/\{[\s\S]*\}/)[0]);
-        const list = Array.isArray(parsed?.medicines) ? parsed.medicines : [];
-        if (list.length === 0) {
-          statusEl.innerText = "⚠️ No medicines detected. Try a clearer photo.";
-          return;
-        }
-
-        const { added, labels } = addScannedMedicinesList(list);
-        renderScheduleGrid();
-        await saveSchedule();
-        statusEl.innerText = added > 0
-          ? `✅ Scheduled ${added} dose(s): ${labels.join(", ")}`
-          : "✅ Medicines from this prescription are already scheduled.";
-      } catch (err) {
-        statusEl.innerText = `⚠️ Scan failed: ${err.message}`;
-      }
-    }
-
-    document.getElementById("cameraInput").onchange = (e) => { handlePrescriptionImage(e.target.files[0]); e.target.value = ""; };
-    document.getElementById("galleryInput").onchange = (e) => { handlePrescriptionImage(e.target.files[0]); e.target.value = ""; };
-
-    // ==================== AI HEALTH CHAT DRAWER ====================
-    const aiDrawer = document.getElementById("aiDrawer");
-    const aiBackdrop = document.getElementById("aiBackdrop");
-
-    document.getElementById("openAiChatBtn").onclick = () => {
-      aiBackdrop.classList.add("show");
-      aiDrawer.classList.add("open");
-      setTimeout(() => document.getElementById("aiChatInput").focus(), 150);
-    };
-    const closeDrawer = () => {
-      aiBackdrop.classList.remove("show");
-      aiDrawer.classList.remove("open");
-    };
-    document.getElementById("closeAiChatBtn").onclick = closeDrawer;
-    aiBackdrop.onclick = closeDrawer;
-
-    function addChatBubble(role, text) {
-      const box = document.getElementById("aiChatMessages");
-      const div = document.createElement("div");
-      div.className = `bubble ${role}`;
-      div.innerText = text;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
-      return div;
-    }
-
-    async function sendAiChatQuestion(qText) {
-      const q = qText.trim();
-      if (!q) return;
-      addChatBubble("user", q);
-      const botBubble = addChatBubble("ai", "Checking your medicine schedule...");
-
-      const prompt = `You are MediRemind AI, a smart healthcare & medicine reminder assistant.
-Today's date: ${getTodayDateStr()}
-User's live medicine schedule: ${JSON.stringify(scheduleData)}
-User question: "${q}"
-Answer helpfully and concisely in the exact language the user asked (English, Bengali, or Hindi).`;
-
-      const { text, error } = await runGeminiAI({ parts: [{ text: prompt }] });
-      botBubble.innerText = text || `⚠️ ${error}`;
-    }
-
-    document.getElementById("aiChatForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const inp = document.getElementById("aiChatInput");
-      const val = inp.value;
-      inp.value = "";
-      await sendAiChatQuestion(val);
-    };
-
-    document.querySelectorAll(".chip-btn").forEach((c) => {
-      c.onclick = () => sendAiChatQuestion(c.dataset.q);
-    });
-
-    // ==================== NOTIFICATIONS, CHIME & VOICE ALARM ====================
-    function updateNotifBtn() {
-      const btn = document.getElementById("enableNotifBtn");
-      if (!("Notification" in window)) {
-        btn.classList.add("hidden");
-        return;
-      }
-      btn.innerText = Notification.permission === "granted" ? "🔔 Alerts On" : "🔔 Enable Alert";
-    }
-
-    function sendSystemNotification(title, body) {
-      if (!("Notification" in window) || Notification.permission !== "granted") return;
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.ready
-          .then((reg) => reg.showNotification(title, { body, icon: "logo.png", vibrate: [300, 150, 300], tag: "med-alert" }))
-          .catch(() => new Notification(title, { body, icon: "logo.png" }));
-      } else {
-        new Notification(title, { body, icon: "logo.png" });
-      }
-    }
-
-    document.getElementById("enableNotifBtn").onclick = async () => {
-      if (!("Notification" in window)) return showToast("Notifications not supported", true);
-      const res = await Notification.requestPermission();
-      updateNotifBtn();
-      if (res === "granted") {
-        showToast("Notifications Enabled!");
-        sendSystemNotification("MediRemind AI", "Medicine reminders & alarms are active!");
-      } else {
-        showToast("Allow notifications in browser settings", true);
-      }
-    };
-
-    function playChime() {
-      try {
-        if ("vibrate" in navigator) navigator.vibrate([300, 150, 300, 150, 400]);
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
-        [587.33, 783.99, 1046.5, 783.99, 1046.5].forEach((f, i) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(f, ctx.currentTime + i * 0.22);
-          gain.gain.setValueAtTime(0.001, ctx.currentTime + i * 0.22);
-          gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + i * 0.22 + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.22 + 0.2);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + i * 0.22);
-          osc.stop(ctx.currentTime + i * 0.22 + 0.21);
-        });
-      } catch (e) {}
-    }
-
-    function speakDose(slotKey, meds) {
-      try {
-        if (!("speechSynthesis" in window)) return;
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(`Medicine reminder! Time for your ${slotKey} dose: ${meds}`);
-        u.rate = 0.96;
-        window.speechSynthesis.speak(u);
-      } catch (e) {}
-    }
-
-    function triggerDoseAlarm(slotKey, medsText) {
-      playChime();
-      speakDose(slotKey, medsText);
-      sendSystemNotification(`💊 ${slotKey} Medicine Reminder`, `Time to take: ${medsText}`);
-      document.getElementById("alarmModalSlot").innerText = `⏰ ${slotKey.toUpperCase()} DOSE REMINDER`;
-      document.getElementById("alarmModalMeds").innerText = medsText;
-      document.getElementById("alarmModal").classList.add("show");
-    }
-
-    document.getElementById("alarmDoneBtn").onclick = () => {
-      document.getElementById("alarmModal").classList.remove("show");
-      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-      showToast("Dose acknowledged!");
-    };
-
-    document.getElementById("testAlarmBtn").onclick = async () => {
-      if ("Notification" in window && Notification.permission === "default") {
-        await Notification.requestPermission().catch(() => {});
-        updateNotifBtn();
-      }
-      const firstSlot = SLOTS.find((s) => scheduleData.medicines.some((m) => m.slot === s.key));
-      const chosen = firstSlot ? firstSlot.key : "Morning";
-      const meds = scheduleData.medicines.filter((m) => m.slot === chosen).map((m) => m.name).join(", ");
-      triggerDoseAlarm(chosen, meds || "Paracetamol 500mg, Vitamin C");
-    };
-
-    function updateNextAlarmBanner() {
-      const subEl = document.getElementById("userSubtitle");
-      const uName = subEl.dataset.userName || "User";
-      const now = new Date();
-      const curHM = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      for (const s of SLOTS) {
-        const t = scheduleData.alarms[s.key] || s.defaultTime;
-        if (t >= curHM) {
-          subEl.innerText = `${uName} • Next Dose: ${s.key} at ${t}`;
-          return;
-        }
-      }
-      subEl.innerText = `${uName} • Next Dose: Tomorrow ${scheduleData.alarms.Morning || "08:30"}`;
-    }
-
-    setInterval(() => {
-      const now = new Date();
-      const curHM = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      const todayStr = getTodayDateStr();
-      updateNextAlarmBanner();
-
-      SLOTS.forEach((s) => {
-        const target = scheduleData.alarms[s.key] || s.defaultTime;
-        const key = `${todayStr}_${s.key}_${target}`;
-        if (target === curHM && !triggeredToday.has(key)) {
-          triggeredToday.add(key);
-          const pending = scheduleData.medicines
-            .filter((m) => m.slot === s.key && m.takenDate !== todayStr)
-            .map((m) => m.name)
-            .join(", ");
-          triggerDoseAlarm(s.key, pending || `Scheduled ${s.key} Medicine`);
-        }
-      });
-    }, 10000);
-
-    // API Key Modal
-    document.getElementById("openKeyModalBtn").onclick = () => {
-      document.getElementById("geminiKeyInput").value = localStorage.getItem("mediremind_gemini_key") || "";
-      document.getElementById("keyModal").classList.add("show");
-    };
-    document.getElementById("closeKeyModalBtn").onclick = () => document.getElementById("keyModal").classList.remove("show");
-
-    document.getElementById("saveGeminiKeyBtn").onclick = () => {
-      const val = document.getElementById("geminiKeyInput").value.trim();
-      if (val) {
-        localStorage.setItem("mediremind_gemini_key", val);
-        showToast("Gemini API Key Saved!");
-      } else {
-        localStorage.removeItem("mediremind_gemini_key");
-        showToast("Cleared custom key");
-      }
-      document.getElementById("keyModal").classList.remove("show");
-    };
-  </script>
+  <script type="module" src="app.js?v=10"></script>
 </body>
 </html>
