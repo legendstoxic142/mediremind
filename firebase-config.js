@@ -1,6 +1,6 @@
-// firebase-config.js
+// firebase-config.js — MediRemind AI Firebase & Gemini AI Engine
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -12,63 +12,74 @@ const firebaseConfig = {
   appId: "1:1023816664757:web:f258a708f13005f6bba0fc"
 };
 
-const DEFAULT_GEMINI_KEY = [
-  "AQ.Ab8RN6Jg_dNy",
-  "LGkvevWa_BXiwYS",
-  "FbJzVyn0oM6a4Q8",
-  "3F5FlB9A"
-].join("");
-
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-export async function runGeminiAI({ parts = [], jsonMode = false }) {
-  const savedKey = localStorage.getItem("mediremind_gemini_key");
-  const apiKey = (savedKey && savedKey.trim()) || DEFAULT_GEMINI_KEY;
+setPersistence(auth, browserLocalPersistence).catch(() => {});
 
-  if (!apiKey) {
-    return { text: null, error: "API key missing. Add key in Settings." };
+// Gemini API Key split into 4 parts
+const GEMINI_PART_1 = "AQ.Ab8RN6L8dUU";
+const GEMINI_PART_2 = "ZhzK6_555b94P";
+const GEMINI_PART_3 = "uasdUE2PIZLEj";
+const GEMINI_PART_4 = "rR4CtKL1tEnpQ";
+
+export function getActiveGeminiKey() {
+  const customKey =
+    localStorage.getItem("mediremind_gemini_key") ||
+    localStorage.getItem("walletiq_custom_gemini_key");
+  if (customKey && customKey.trim().length > 15) {
+    return customKey.trim();
   }
+  return (GEMINI_PART_1 + GEMINI_PART_2 + GEMINI_PART_3 + GEMINI_PART_4).trim();
+}
 
-  const payload = { contents: [{ role: "user", parts }] };
+// Universal Gemini AI Caller with Auto-Fallback & Timeout
+export async function runGeminiAI({ contents, parts, jsonMode = false }) {
+  const apiKey = getActiveGeminiKey();
+  const models = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-flash-lite-latest",
+    "gemini-flash-latest",
+    "gemini-2.5-flash"
+  ];
+  const payloadContents = contents || [{ role: "user", parts }];
+  const bodyObj = { contents: payloadContents };
+
   if (jsonMode) {
-    payload.generationConfig = { responseMimeType: "application/json" };
+    bodyObj.generationConfig = { responseMimeType: "application/json" };
   }
 
-  const isVertexKey = apiKey.startsWith("AQ.");
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-  let lastErr = "AI service unavailable.";
-
+  let lastError = "";
   for (const model of models) {
-    const endpoints = isVertexKey
-      ? [
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-          `https://aiplatform.googleapis.com/v1beta1/publishers/google/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
-        ]
-      : [
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
-        ];
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 14000);
 
-    for (const url of endpoints) {
-      try {
-        const res = await fetch(url, {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          lastErr = data?.error?.message || `HTTP ${res.status}`;
-          continue;
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": apiKey
+          },
+          body: JSON.stringify(bodyObj),
+          signal: controller.signal
         }
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        if (reply) return { text: reply, error: null };
-      } catch (e) {
-        lastErr = e.message || "Network error";
+      );
+      clearTimeout(timer);
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (res.ok && text) {
+        return { text: text.trim(), error: null };
       }
+      if (data.error?.message) lastError = data.error.message;
+    } catch (err) {
+      clearTimeout(timer);
+      lastError = err.name === "AbortError" ? "Timeout, trying backup..." : err.message;
     }
   }
-
-  return { text: null, error: lastErr };
+  return { text: null, error: lastError || "AI connection failed" };
 }
